@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 
 function FlightForm({ addFlight }) {
   const [time, setTime] = useState('');
-  const [name, setName] = useState('');
+  const [callsign, setCallsign] = useState('');
   const [type, setType] = useState('PPL');
-  const [flightNumber, setFlightNumber] = useState('');
+  const [destination, setDestination] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -16,17 +16,16 @@ function FlightForm({ addFlight }) {
       return;
     }
 
-    // Validate that name and flightNumber are provided and not too long
-    if (name.length > 6 || flightNumber.length > 6) {
-      alert("Name and Flight Number must be 6 characters or less");
+    if (callsign.length > 6 || destination.length > 6) {
+      alert("Callsign and destination must be 6 characters or less");
       return;
     }
 
-    addFlight({ time, name, type, flightNumber });
+    addFlight({ time, callsign, type, destination });
     setTime('');
-    setName('');
+    setCallsign('');
     setType('PPL');
-    setFlightNumber('');
+    setDestination('');
   };
 
   return (
@@ -44,12 +43,12 @@ function FlightForm({ addFlight }) {
         />
       </div>
       <div className="form-group">
-        <label htmlFor="name">Name (Max 6 chars):</label>
+        <label htmlFor="callsign">Callsign (Max 6 chars):</label>
         <input
           type="text"
-          id="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          id="callsign"
+          value={callsign}
+          onChange={(e) => setCallsign(e.target.value)}
           required
           maxLength="6"
         />
@@ -66,12 +65,12 @@ function FlightForm({ addFlight }) {
         </select>
       </div>
       <div className="form-group">
-        <label htmlFor="flightNumber">Flight Number (Max 6 chars):</label>
+        <label htmlFor="destination">Destination (Max 6 chars):</label>
         <input
           type="text"
-          id="flightNumber"
-          value={flightNumber}
-          onChange={(e) => setFlightNumber(e.target.value)}
+          id="destination"
+          value={destination}
+          onChange={(e) => setDestination(e.target.value)}
           required
           maxLength="6"
         />
