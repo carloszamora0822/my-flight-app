@@ -8,9 +8,10 @@ function App() {
     ? '/api'
     : 'http://localhost:3001/api';
 
-  useEffect(() => {
-    fetchFlights();
-  }, []);
+    useEffect(() => {
+        fetchFlights();
+      }, [fetchFlights]);
+      
 
   const fetchFlights = async () => {
     try {
