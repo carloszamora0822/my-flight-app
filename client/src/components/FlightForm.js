@@ -4,7 +4,7 @@ function FlightForm({ addFlight }) {
   const [time, setTime] = useState('');
   const [name, setName] = useState('');
   const [type, setType] = useState('PPL');
-  const [flightNumber, setflightNumber] = useState('');
+  const [flightNumber, setFlightNumber] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -16,8 +16,9 @@ function FlightForm({ addFlight }) {
       return;
     }
 
+    // Validate that name and flightNumber are provided and not too long
     if (name.length > 6 || flightNumber.length > 6) {
-      alert("Callsign and flightNumber must be 6 characters or less");
+      alert("Name and Flight Number must be 6 characters or less");
       return;
     }
 
@@ -25,7 +26,7 @@ function FlightForm({ addFlight }) {
     setTime('');
     setName('');
     setType('PPL');
-    setflightNumber('');
+    setFlightNumber('');
   };
 
   return (
@@ -70,7 +71,7 @@ function FlightForm({ addFlight }) {
           type="text"
           id="flightNumber"
           value={flightNumber}
-          onChange={(e) => setflightNumber(e.target.value)}
+          onChange={(e) => setFlightNumber(e.target.value)}
           required
           maxLength="6"
         />
