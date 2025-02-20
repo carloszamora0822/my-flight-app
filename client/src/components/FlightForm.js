@@ -16,13 +16,13 @@ function FlightForm({ addFlight }) {
       return;
     }
 
-    // Validate name and flight number length (max 6 characters each)
-    if (name.length > 6 || flightNumber.length > 6) {
-      alert("Name and Flight Number must be 6 characters or less");
+    // Validate name and flight number length (max 6 characters)
+    if (name.trim().length === 0 || flightNumber.trim().length === 0 || name.length > 6 || flightNumber.length > 6) {
+      alert("Name and Flight Number must be provided and be 6 characters or less");
       return;
     }
 
-    // Submit the flight with the new keys
+    // Submit with new keys
     addFlight({ time, name, flightType, flightNumber });
     setTime('');
     setName('');

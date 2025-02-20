@@ -5,17 +5,19 @@ const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 3001;
 
-const { flights } = require('./data');
+const { getFlights, addFlight, deleteFlight } = require('./data');
+const { convertFlightsToMatrix } = require('./vestaConversion');
+const { updateVestaBoard } = require('./vestaboard');
 
 app.use(cors());
 app.use(express.json());
 
 // GET /api/flights - Return the flights array.
 app.get('/api/flights', (req, res) => {
-  res.json(flights);
+  res.json(getFlights());
 });
 
-// POST /api/flights - Add a new flight entry and return the updated flights array.
+// POST /api/flights - Add a new flight and return the updated flights array.
 app.post('/api/flights', (req, res) => {
   const newFlight = req.body;
   // Validate that all fields are provided.
@@ -24,38 +26,38 @@ app.post('/api/flights', (req, res) => {
   }
   
   try {
-    flights.push(newFlight);
-    // Ensure only the 5 most recent flights are kept.
-    while (flights.length > 5) {
-      flights.shift();
-    }
-    res.json(flights);
+    const updatedFlights = addFlight(newFlight);
+    res.json(updatedFlights);
+    // After updating the flights, update the Vestaboard.
+    const matrix = convertFlightsToMatrix(getFlights());
+    updateVestaBoard(matrix)
+      .then(() => console.log('Vestaboard updated successfully.'))
+      .catch(err => console.error('Error updating Vestaboard:', err));
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-// DELETE /api/flights/:index - Delete a flight entry and return the updated flights array.
+// DELETE /api/flights/:index - Delete a flight and return the updated flights array.
 app.delete('/api/flights/:index', (req, res) => {
   const index = parseInt(req.params.index, 10);
-  if (isNaN(index) || index < 0 || index >= flights.length) {
-    return res.status(400).json({ error: 'Invalid index' });
-  }
-  
   try {
-    flights.splice(index, 1);
-    res.json(flights);
+    const updatedFlights = deleteFlight(index);
+    res.json(updatedFlights);
+    // Update the Vestaboard after deletion.
+    const matrix = convertFlightsToMatrix(getFlights());
+    updateVestaBoard(matrix)
+      .then(() => console.log('Vestaboard updated successfully.'))
+      .catch(err => console.error('Error updating Vestaboard:', err));
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 });
 
-// GET /api/updateVestaboard - Convert the current flights to a 6x22 matrix and update the Vestaboard.
+// GET /api/updateVestaboard - Manually trigger a Vestaboard update.
 app.get('/api/updateVestaboard', async (req, res) => {
   try {
-    const { convertFlightsToMatrix } = require('./vestaConversion');
-    const { updateVestaBoard } = require('./vestaboard');
-    const matrix = convertFlightsToMatrix(flights);
+    const matrix = convertFlightsToMatrix(getFlights());
     await updateVestaBoard(matrix);
     res.json({ success: true, message: 'Vestaboard updated successfully.' });
   } catch (error) {
