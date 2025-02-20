@@ -2,16 +2,14 @@ import React from 'react';
 
 function FlightItem({ flight, onDelete }) {
   return (
-    <div className="history-item">
-      <div className="submission-details">
-        <span>{flight.time}</span>
-        <span>{flight.callsign}</span>
-        <span>{flight.type}</span>
-        <span>{flight.destination}</span>
-      </div>
-      <button className="deleteBtn" onClick={onDelete}>
-        Delete
-      </button>
+    <div className="flight-item">
+      <p>
+        <strong>Time:</strong> {flight.time} |{' '}
+        <strong>Name:</strong> {flight.name} |{' '}
+        <strong>Flight Type:</strong> {flight.flightType} |{' '}
+        <strong>Flight Number:</strong> {flight.flightNumber}
+      </p>
+      <button onClick={onDelete}>Delete</button>
     </div>
   );
 }

@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 
 function FlightForm({ addFlight }) {
   const [time, setTime] = useState('');
-  const [callsign, setCallsign] = useState('');
-  const [type, setType] = useState('PPL');
-  const [destination, setDestination] = useState('');
+  const [name, setName] = useState('');
+  const [flightType, setFlightType] = useState('PPL');
+  const [flightNumber, setFlightNumber] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -16,16 +16,18 @@ function FlightForm({ addFlight }) {
       return;
     }
 
-    if (callsign.length > 6 || destination.length > 6) {
-      alert("Callsign and destination must be 6 characters or less");
+    // Validate name and flight number length (max 6 characters each)
+    if (name.length > 6 || flightNumber.length > 6) {
+      alert("Name and Flight Number must be 6 characters or less");
       return;
     }
 
-    addFlight({ time, callsign, type, destination });
+    // Submit the flight with the new keys
+    addFlight({ time, name, flightType, flightNumber });
     setTime('');
-    setCallsign('');
-    setType('PPL');
-    setDestination('');
+    setName('');
+    setFlightType('PPL');
+    setFlightNumber('');
   };
 
   return (
@@ -43,34 +45,34 @@ function FlightForm({ addFlight }) {
         />
       </div>
       <div className="form-group">
-        <label htmlFor="callsign">Callsign (Max 6 chars):</label>
+        <label htmlFor="name">Name (Max 6 chars):</label>
         <input
           type="text"
-          id="callsign"
-          value={callsign}
-          onChange={(e) => setCallsign(e.target.value)}
+          id="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           required
           maxLength="6"
         />
       </div>
       <div className="form-group">
-        <label htmlFor="type">Type:</label>
+        <label htmlFor="flightType">Flight Type:</label>
         <select
-          id="type"
-          value={type}
-          onChange={(e) => setType(e.target.value)}
+          id="flightType"
+          value={flightType}
+          onChange={(e) => setFlightType(e.target.value)}
         >
           <option value="PPL">PPL</option>
           <option value="IFR">IFR</option>
         </select>
       </div>
       <div className="form-group">
-        <label htmlFor="destination">Destination (Max 6 chars):</label>
+        <label htmlFor="flightNumber">Flight Number (Max 6 chars):</label>
         <input
           type="text"
-          id="destination"
-          value={destination}
-          onChange={(e) => setDestination(e.target.value)}
+          id="flightNumber"
+          value={flightNumber}
+          onChange={(e) => setFlightNumber(e.target.value)}
           required
           maxLength="6"
         />
