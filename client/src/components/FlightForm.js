@@ -31,7 +31,7 @@ function FlightForm({ addFlight }) {
   return (
     <form onSubmit={handleSubmit}>
       <div className="form-group">
-        <label htmlFor="time">Time (Military - 4 digits):</label>
+        <label htmlFor="time">Time (Military):</label>
         <input
           type="text"
           id="time"
@@ -43,7 +43,7 @@ function FlightForm({ addFlight }) {
         />
       </div>
       <div className="form-group">
-        <label htmlFor="callsign">Callsign (Max 6 chars):</label>
+        <label htmlFor="callsign">Name:</label>
         <input
           type="text"
           id="callsign"
@@ -54,7 +54,7 @@ function FlightForm({ addFlight }) {
         />
       </div>
       <div className="form-group">
-        <label htmlFor="type">Type:</label>
+        <label htmlFor="type">Flight Type:</label>
         <select
           id="type"
           value={type}
@@ -65,7 +65,7 @@ function FlightForm({ addFlight }) {
         </select>
       </div>
       <div className="form-group">
-        <label htmlFor="destination">Destination (Max 6 chars):</label>
+        <label htmlFor="destination">Flight Number:</label>
         <input
           type="text"
           id="destination"
