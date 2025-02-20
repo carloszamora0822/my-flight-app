@@ -4,11 +4,11 @@ const axios = require('axios');
 const { VESTA_API_KEY, VESTA_BOARD_ID } = require('./config');
 
 async function updateVestaBoard(matrix) {
-  // Convert each row (an array of numbers) to a string with codes separated by spaces.
-  // Then join rows with newline characters.
+  // Format the matrix into a message string:
+  // Each row (an array of numbers) is joined with spaces, and rows are joined with newlines.
   const message = matrix.map(row => row.join(' ')).join('\n');
 
-  // Vestaboard API endpoint – update this URL if needed.
+  // Vestaboard API endpoint – update this URL if necessary.
   const url = `https://platform.vestaboard.com/v1/boards/${VESTA_BOARD_ID}/display`;
 
   try {

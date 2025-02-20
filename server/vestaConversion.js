@@ -61,14 +61,13 @@ const vestaboardMap = {
     "°": 62
   };
   
-  // Convert a single character to its Vestaboard code.
   function charToVestaCode(char) {
     const upper = char.toUpperCase();
     return vestaboardMap.hasOwnProperty(upper) ? vestaboardMap[upper] : 0;
   }
   
-  // Convert a string into an array of Vestaboard codes of fixed length (22 characters).
-  // If the string is too short, pad with padChar; if too long, truncate.
+  // Convert a string to an array of Vestaboard codes of fixed length (22 characters).
+  // If the string is too short, pad it with padChar; if too long, truncate it.
   function convertStringToVestaCodes(str, length = 22, padChar = ' ') {
     str = str || '';
     if (str.length < length) {
@@ -79,22 +78,23 @@ const vestaboardMap = {
     return str.split('').map(ch => charToVestaCode(ch));
   }
   
-  // Convert the flights array into a 6×22 matrix.
-  // Row 0: Header ("Checkrides {todays date}")  
-  // Rows 1–5: Each row is built from a flight object formatted as "time name flightType flightNumber".
-  // If fewer than 5 flights exist, fill remaining rows with 22 zeros.
+  // Convert the flights array into a 6x22 matrix.
+  // Row 0: Header ("Checkrides {todays date}")
+  // Rows 1–5: Each row is built from a flight object formatted as:
+  // "time name flightType flightNumber"
+  // If fewer than 5 flights exist, fill remaining rows with a row of 22 zeros.
   function convertFlightsToMatrix(flights) {
     const today = new Date().toLocaleDateString();
     const headerStr = `Checkrides ${today}`;
     const headerRow = convertStringToVestaCodes(headerStr, 22, ' ');
   
-    // Build rows from the five most recent flight objects.
+    // Take the last 5 flights (assuming your app handles shifting when over 5)
     const flightRows = flights.slice(-5).map(flight => {
       const rowStr = `${flight.time} ${flight.name} ${flight.flightType} ${flight.flightNumber}`;
       return convertStringToVestaCodes(rowStr, 22, ' ');
     });
   
-    // Fill with a row of zeros if fewer than 5 flights.
+    // If there are fewer than 5 flights, fill with rows of zeros.
     while (flightRows.length < 5) {
       flightRows.push(convertStringToVestaCodes('0'.repeat(22), 22, '0'));
     }
