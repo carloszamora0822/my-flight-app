@@ -1,19 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import FlightForm from './components/FlightForm';
 import FlightList from './components/FlightList';
 
 function App() {
   const [flights, setFlights] = useState([]);
-  const API_URL = process.env.NODE_ENV === 'production' 
-    ? '/api'
-    : 'http://localhost:3001/api';
+  const API_URL = process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:3001/api';
 
-    useEffect(() => {
-        fetchFlights();
-      }, [fetchFlights]);
-      
-
-  const fetchFlights = async () => {
+  // Define and memoize fetchFlights so that it doesn't change on every render
+  const fetchFlights = useCallback(async () => {
     try {
       const response = await fetch(`${API_URL}/flights`);
       const data = await response.json();
@@ -21,7 +15,12 @@ function App() {
     } catch (error) {
       console.error('Error fetching flights:', error);
     }
-  };
+  }, [API_URL]);
+
+  // Call fetchFlights once on component mount
+  useEffect(() => {
+    fetchFlights();
+  }, [fetchFlights]);
 
   const addFlight = async (newFlight) => {
     try {
