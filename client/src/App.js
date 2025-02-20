@@ -6,18 +6,17 @@ function App() {
   const [flights, setFlights] = useState([]);
   const API_URL = process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:3001/api';
 
-  // Define and memoize fetchFlights so that it doesn't change on every render
   const fetchFlights = useCallback(async () => {
     try {
       const response = await fetch(`${API_URL}/flights`);
       const data = await response.json();
+      console.log('Fetched flights:', data);
       setFlights(data);
     } catch (error) {
       console.error('Error fetching flights:', error);
     }
   }, [API_URL]);
 
-  // Call fetchFlights once on component mount
   useEffect(() => {
     fetchFlights();
   }, [fetchFlights]);
@@ -26,51 +25,27 @@ function App() {
     try {
       const response = await fetch(`${API_URL}/flights`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newFlight),
       });
-  
-      // Check if the response is not OK (e.g. 400 error)
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Error adding flight:', errorData.error);
-        alert(`Error adding flight: ${errorData.error}`);
-        return; // Do not update state if there's an error
-      }
-  
-      // If OK, parse the response and update flights
       const data = await response.json();
       setFlights(data);
     } catch (error) {
       console.error('Error adding flight:', error);
-      alert('An error occurred while adding the flight.');
     }
   };
-  
 
   const deleteFlight = async (index) => {
     try {
       const response = await fetch(`${API_URL}/flights/${index}`, {
         method: 'DELETE',
       });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Error deleting flight:', errorData.error);
-        alert(`Error deleting flight: ${errorData.error}`);
-        return;
-      }
-  
       const data = await response.json();
       setFlights(data);
     } catch (error) {
       console.error('Error deleting flight:', error);
-      alert('An error occurred while deleting the flight.');
     }
   };
-  
 
   return (
     <div className="container">
