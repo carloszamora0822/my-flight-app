@@ -1,76 +1,88 @@
 import React, { useState } from 'react';
 
 function FlightForm({ addFlight }) {
-  const [time, setTime] = useState('');
-  const [callsign, setCallsign] = useState('');
-  const [type, setType] = useState('PPL');
-  const [destination, setDestination] = useState('');
+  // Descriptive variable names corresponding to flight object properties
+  const [flightTime, setFlightTime] = useState('');
+  const [pilotName, setPilotName] = useState('');
+  const [flightType, setFlightType] = useState('PPL');
+  const [flightNumber, setFlightNumber] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     
     // Validate time format (military time)
-    const timeNum = parseInt(time);
-    if (time.length !== 4 || isNaN(timeNum) || timeNum < 0 || timeNum > 2359) {
+    const timeNum = parseInt(flightTime);
+    if (flightTime.length !== 4 || isNaN(timeNum) || timeNum < 0 || timeNum > 2359) {
       alert("Invalid time format. Please use military time (0000-2359)");
       return;
     }
 
-    if (callsign.length > 6 || destination.length > 6) {
-      alert("Callsign and destination must be 6 characters or less");
+    // Validate that pilotName and flightNumber are provided and no longer than 6 characters.
+    if (pilotName.trim().length === 0 || flightNumber.trim().length === 0 || pilotName.length > 6 || flightNumber.length > 6) {
+      alert("Name and Flight Number must be provided and be 6 characters or less");
       return;
     }
 
-    addFlight({ time, callsign, type, destination });
-    setTime('');
-    setCallsign('');
-    setType('PPL');
-    setDestination('');
+    // Create a flight object using the descriptive keys
+    const newFlight = {
+      time: flightTime,
+      name: pilotName,
+      flightType,
+      flightNumber
+    };
+
+    addFlight(newFlight);
+
+    // Clear the form fields
+    setFlightTime('');
+    setPilotName('');
+    setFlightType('PPL');
+    setFlightNumber('');
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <div className="form-group">
-        <label htmlFor="time">Time (Military - 4 digits):</label>
+        <label htmlFor="flightTime">Time (Military - 4 digits):</label>
         <input
           type="text"
-          id="time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
+          id="flightTime"
+          value={flightTime}
+          onChange={(e) => setFlightTime(e.target.value)}
           required
           pattern="[0-9]{4}"
           maxLength="4"
         />
       </div>
       <div className="form-group">
-        <label htmlFor="callsign">Callsign (Max 6 chars):</label>
+        <label htmlFor="pilotName">Name (Max 6 chars):</label>
         <input
           type="text"
-          id="callsign"
-          value={callsign}
-          onChange={(e) => setCallsign(e.target.value)}
+          id="pilotName"
+          value={pilotName}
+          onChange={(e) => setPilotName(e.target.value)}
           required
           maxLength="6"
         />
       </div>
       <div className="form-group">
-        <label htmlFor="type">Type:</label>
+        <label htmlFor="flightType">Flight Type:</label>
         <select
-          id="type"
-          value={type}
-          onChange={(e) => setType(e.target.value)}
+          id="flightType"
+          value={flightType}
+          onChange={(e) => setFlightType(e.target.value)}
         >
           <option value="PPL">PPL</option>
           <option value="IFR">IFR</option>
         </select>
       </div>
       <div className="form-group">
-        <label htmlFor="destination">Destination (Max 6 chars):</label>
+        <label htmlFor="flightNumber">Flight Number (Max 6 chars):</label>
         <input
           type="text"
-          id="destination"
-          value={destination}
-          onChange={(e) => setDestination(e.target.value)}
+          id="flightNumber"
+          value={flightNumber}
+          onChange={(e) => setFlightNumber(e.target.value)}
           required
           maxLength="6"
         />
