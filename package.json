@@ -3,12 +3,13 @@
     "version": "1.0.0",
     "private": true,
     "scripts": {
-        "dev": "concurrently \"npm run start:client\" \"npm run start:server\"",
-        "start:client": "cd client && npm start",
-        "start:server": "cd server && npm run dev",
-        "build": "cd client && npm run build"
+      "dev": "concurrently \"npm run start:client\" \"npm run start:server\"",
+      "start:client": "cd client && npm start",
+      "start:server": "cd server && npm run dev",
+      "build": "cd client && npm run build && cp -R build ../build"
     },
     "devDependencies": {
-        "concurrently": "^8.2.2"
+      "concurrently": "^8.2.2"
     }
-}
+  }
+  
