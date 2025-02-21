@@ -4,13 +4,13 @@ import FlightList from './components/FlightList';
 
 function App() {
   const [flights, setFlights] = useState([]);
-  // Use relative path for API calls
   const API_URL = '/api';
 
   const fetchFlights = useCallback(async () => {
+    console.log('Fetching flights...');
     try {
       const url = `${API_URL}/flights`;
-      console.log('Sending GET request to:', url);
+      console.log('GET request to:', url);
       
       const response = await fetch(url, {
         method: 'GET',
@@ -21,16 +21,23 @@ function App() {
       });
       
       console.log('GET response status:', response.status);
-      const data = await response.json();
+      
+      const text = await response.text();
+      console.log('Raw response:', text);
+      
+      const data = text ? JSON.parse(text) : [];
+      console.log('Parsed data:', data);
       
       if (!response.ok) {
         throw new Error(data.message || 'Failed to fetch flights');
       }
       
-      console.log('Fetched flights:', data);
       setFlights(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error fetching flights:', error.message);
+      console.error('Fetch error details:', {
+        message: error.message,
+        stack: error.stack
+      });
       setFlights([]);
     }
   }, [API_URL]);
@@ -40,9 +47,10 @@ function App() {
   }, [fetchFlights]);
 
   const addFlight = async (newFlight) => {
+    console.log('Adding flight:', newFlight);
     try {
       const url = `${API_URL}/flights`;
-      console.log('Sending POST request to:', url, newFlight);
+      console.log('POST request to:', url);
       
       const response = await fetch(url, {
         method: 'POST',
@@ -53,17 +61,25 @@ function App() {
         body: JSON.stringify(newFlight),
       });
       
-      const data = await response.json();
+      console.log('POST response status:', response.status);
+      
+      const text = await response.text();
+      console.log('Raw response:', text);
+      
+      const data = text ? JSON.parse(text) : null;
+      console.log('Parsed data:', data);
       
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to add flight');
+        throw new Error(data?.message || 'Failed to add flight');
       }
       
-      console.log('POST success:', data);
       setFlights(Array.isArray(data) ? data : []);
       return data;
     } catch (error) {
-      console.error('Error adding flight:', error.message);
+      console.error('Add flight error details:', {
+        message: error.message,
+        stack: error.stack
+      });
       throw error;
     }
   };
