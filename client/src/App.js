@@ -4,29 +4,37 @@ import FlightList from './components/FlightList';
 
 function App() {
   const [flights, setFlights] = useState([]);
-  const API_URL = process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:3001/api';
+  // Use relative path for API calls
+  const API_URL = '/api';
 
   const fetchFlights = useCallback(async () => {
     try {
-      console.log('Sending GET request to:', `${API_URL}/flights`);
-      const response = await fetch(`${API_URL}/flights`, {
+      const url = `${API_URL}/flights`;
+      console.log('Sending GET request to:', url);
+      
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-        }
+        },
+        mode: 'cors' // Add explicit CORS mode
       });
+      
       console.log('GET response status:', response.status);
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
+      
       const data = await response.json();
       console.log('Fetched flights:', data);
-      setFlights(data);
+      setFlights(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching flights:', error);
+      setFlights([]); // Set empty array on error
     }
-  }, [API_URL]);
+  }, []);
 
   useEffect(() => {
     fetchFlights();
@@ -34,25 +42,33 @@ function App() {
 
   const addFlight = async (newFlight) => {
     try {
-      console.log('Sending POST request to:', `${API_URL}/flights`);
-      const response = await fetch(`${API_URL}/flights`, {
+      const url = `${API_URL}/flights`;
+      console.log('Sending POST request to:', url);
+      console.log('POST data:', newFlight);
+      
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
+        mode: 'cors', // Add explicit CORS mode
         body: JSON.stringify(newFlight),
       });
+      
       console.log('POST response status:', response.status);
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
+      
       const data = await response.json();
-      setFlights(data);
-      return data; // Return the data to the FlightForm component
+      console.log('POST response data:', data);
+      setFlights(Array.isArray(data) ? data : []);
+      return data;
     } catch (error) {
       console.error('Error adding flight:', error);
-      throw error; // Throw the error to be caught by FlightForm
+      throw error;
     }
   };
 
