@@ -36,8 +36,10 @@ function App() {
       }
       const data = await response.json();
       setFlights(data);
+      return data; // Return the data to the FlightForm component
     } catch (error) {
       console.error('Error adding flight:', error);
+      throw error; // Throw the error to be caught by FlightForm
     }
   };
 
