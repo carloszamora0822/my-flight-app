@@ -1,4 +1,3 @@
-// server/server.js
 require('dotenv').config();
 
 const express = require('express');
@@ -13,7 +12,12 @@ app.use(cors());
 app.use(express.json());
 
 app.get('/api/flights', (req, res) => {
-  res.json(flights);
+  try {
+    res.json(flights);
+  } catch (error) {
+    console.error('Error fetching flights:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 app.post('/api/flights', (req, res) => {

@@ -9,6 +9,9 @@ function App() {
   const fetchFlights = useCallback(async () => {
     try {
       const response = await fetch(`${API_URL}/flights`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
       console.log('Fetched flights:', data);
       setFlights(data);
@@ -28,6 +31,9 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newFlight),
       });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
       setFlights(data);
     } catch (error) {
@@ -40,6 +46,9 @@ function App() {
       const response = await fetch(`${API_URL}/flights/${index}`, {
         method: 'DELETE',
       });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
       setFlights(data);
     } catch (error) {
