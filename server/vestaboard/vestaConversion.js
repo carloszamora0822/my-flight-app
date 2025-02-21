@@ -1,6 +1,6 @@
-// server/vestaConversion.js
+// server/vestaboard/vestaConversion.js
 
-// Vestaboard character code mapping based on the official table.
+// Vestaboard character code mapping from the official table.
 const vestaboardMap = {
     " ": 0,      // Blank
     "A": 1, "B": 2, "C": 3, "D": 4, "E": 5, "F": 6, "G": 7, "H": 8, "I": 9,
@@ -17,7 +17,8 @@ const vestaboardMap = {
     return vestaboardMap.hasOwnProperty(upper) ? vestaboardMap[upper] : 0;
   }
   
-  // Force the input to be a string using String(), pad or truncate to exactly 22 characters.
+  // Convert a string to an array of Vestaboard codes of fixed length (22 characters).
+  // Force input to be a string; if too short, pad with padChar; if too long, truncate.
   function convertStringToVestaCodes(str, length = 22, padChar = ' ') {
     str = String(str || '');
     if (str.length < length) {
@@ -25,21 +26,21 @@ const vestaboardMap = {
     } else {
       str = str.substring(0, length);
     }
-    return str.split('').map(ch => charToVestaCode(ch));
+    return str.split('').map(charToVestaCode);
   }
   
-  // Convert the flights array into a 6x22 matrix.
-  // Row 0: Header ("Checkrides {todays date}")
-  // Rows 1-5: Each row is built from a flight object formatted as "time name flightType flightNumber".
-  // If there are fewer than 5 flights, fill remaining rows with 22 zeros.
+  // Convert the flights array into a 6×22 matrix.
+  // - Row 0: Header ("Checkrides {todays date}") padded to 22 characters.
+  // - Rows 1–5: Each row is built from a flight object formatted as 
+  //         "time callsign type destination" (with a space between each field).
+  //   If fewer than 5 flights exist, the remaining rows are filled with 22 zeros.
   function convertFlightsToMatrix(flights) {
     const today = new Date().toLocaleDateString();
     const headerStr = `Checkrides ${today}`;
     const headerRow = convertStringToVestaCodes(headerStr, 22, ' ');
   
     const flightRows = flights.slice(-5).map(flight => {
-      // Force each field to string.
-      const rowStr = `${String(flight.time)} ${String(flight.name)} ${String(flight.flightType)} ${String(flight.flightNumber)}`;
+      const rowStr = `${flight.time} ${flight.callsign} ${flight.type} ${flight.destination}`;
       return convertStringToVestaCodes(rowStr, 22, ' ');
     });
   
