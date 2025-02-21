@@ -8,9 +8,17 @@ function App() {
 
   const fetchFlights = useCallback(async () => {
     try {
-      const response = await fetch(`${API_URL}/flights`);
+      console.log('Sending GET request to:', `${API_URL}/flights`);
+      const response = await fetch(`${API_URL}/flights`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        }
+      });
+      console.log('GET response status:', response.status);
       if (!response.ok) {
-        throw new Error(`HTTP error 1! status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
       console.log('Fetched flights:', data);
@@ -26,13 +34,18 @@ function App() {
 
   const addFlight = async (newFlight) => {
     try {
+      console.log('Sending POST request to:', `${API_URL}/flights`);
       const response = await fetch(`${API_URL}/flights`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(newFlight),
       });
+      console.log('POST response status:', response.status);
       if (!response.ok) {
-        throw new Error(`HTTP error 2! status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
       setFlights(data);

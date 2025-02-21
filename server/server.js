@@ -8,8 +8,20 @@ const port = process.env.PORT || 3001;
 const { flights, safeGet, safePush } = require('./data');
 const { updateVestaboardFromData } = require('./vestaboard/autoUpdate');
 
-app.use(cors());
+// Updated CORS configuration
+app.use(cors({
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST', 'DELETE'],
+    allowedHeaders: ['Content-Type']
+}));
+
 app.use(express.json());
+
+// Add error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Server error:', err);
+    res.status(500).json({ error: err.message });
+});
 
 app.get('/api/flights', (req, res) => {
   try {
