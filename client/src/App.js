@@ -1,97 +1,49 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import FlightForm from './components/FlightForm';
 import FlightList from './components/FlightList';
 
 function App() {
   const [flights, setFlights] = useState([]);
-  const API_URL = '/api';
-
-  const fetchFlights = useCallback(async () => {
-    console.log('Fetching flights...');
-    try {
-      const url = `${API_URL}/flights`;
-      console.log('GET request to:', url);
-      
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        }
-      });
-      
-      console.log('GET response status:', response.status);
-      
-      const text = await response.text();
-      console.log('Raw response:', text);
-      
-      const data = text ? JSON.parse(text) : [];
-      console.log('Parsed data:', data);
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch flights');
-      }
-      
-      setFlights(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Fetch error details:', {
-        message: error.message,
-        stack: error.stack
-      });
-      setFlights([]);
-    }
-  }, [API_URL]);
 
   useEffect(() => {
     fetchFlights();
-  }, [fetchFlights]);
+  }, []);
+
+  const fetchFlights = async () => {
+    try {
+      const response = await fetch('/api/flights');
+      const data = await response.json();
+      console.log('Fetched flights:', data);
+      setFlights(Array.isArray(data) ? data : data.flights || []);
+    } catch (error) {
+      console.error('Error fetching flights:', error);
+    }
+  };
 
   const addFlight = async (newFlight) => {
-    console.log('Adding flight:', newFlight);
     try {
-      const url = `${API_URL}/flights`;
-      console.log('POST request to:', url);
-      
-      const response = await fetch(url, {
+      const response = await fetch('/api/flights', {
         method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newFlight),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newFlight)
       });
+      const data = await response.json();
+      console.log('Add flight response:', data);
       
-      console.log('POST response status:', response.status);
-      
-      const text = await response.text();
-      console.log('Raw response:', text);
-      
-      const data = text ? JSON.parse(text) : null;
-      console.log('Parsed data:', data);
-      
-      if (!response.ok) {
-        throw new Error(data?.message || 'Failed to add flight');
-      }
-      
-      setFlights(Array.isArray(data) ? data : []);
+      // Update the flights state with the new data
+      setFlights(data.flights || []);
       return data;
     } catch (error) {
-      console.error('Add flight error details:', {
-        message: error.message,
-        stack: error.stack
-      });
+      console.error('Error:', error);
       throw error;
     }
   };
 
   const deleteFlight = async (index) => {
     try {
-      const response = await fetch(`${API_URL}/flights/${index}`, {
-        method: 'DELETE',
+      const response = await fetch(`/api/flights/${index}`, {
+        method: 'DELETE'
       });
-      if (!response.ok) {
-        throw new Error(`HTTP error 3! status: ${response.status}`);
-      }
       const data = await response.json();
       setFlights(data);
     } catch (error) {
@@ -100,14 +52,18 @@ function App() {
   };
 
   return (
-    <div className="container">
-      <header>
-        <h1>Flight Data App</h1>
-      </header>
-      <main>
-        <FlightForm addFlight={addFlight} />
-        <FlightList flights={flights} deleteFlight={deleteFlight} />
-      </main>
+    <div className="App">
+      <h1>Flight Schedule</h1>
+      <FlightForm addFlight={addFlight} />
+      <div className="flights-list">
+        {flights.map((flight, index) => (
+          <FlightItem 
+            key={index}
+            flight={flight}
+            onDelete={() => deleteFlight(index)}
+          />
+        ))}
+      </div>
     </div>
   );
 }

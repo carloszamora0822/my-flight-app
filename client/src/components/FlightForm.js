@@ -22,12 +22,18 @@ function FlightForm({ addFlight }) {
     }
 
     try {
-      const data = await addFlight({ time, callsign, type, destination });
-      console.log('Flight added successfully:', data);
-      setTime('');
-      setCallsign('');
-      setType('PPL');
-      setDestination('');
+      const response = await addFlight({ time, callsign, type, destination });
+      console.log('Flight added successfully:', response);
+      
+      // Clear form only if addition was successful
+      if (response.success) {
+        setTime('');
+        setCallsign('');
+        setType('PPL');
+        setDestination('');
+      } else {
+        alert('Failed to add flight. Please try again.');
+      }
     } catch (error) {
       console.error('Error adding flight:', error);
       alert('Error adding flight. Please try again.');
