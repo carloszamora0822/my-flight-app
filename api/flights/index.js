@@ -1,4 +1,5 @@
-const { flights, safeGet, safePush } = require('../../server/data');
+// In-memory storage (note: this resets on cold starts)
+let flights = [];
 
 export default async function handler(req, res) {
     // Enable CORS
@@ -12,14 +13,14 @@ export default async function handler(req, res) {
         return res.status(200).end();
     }
 
+    console.log(`[${req.method}] ${req.url} received`);
+
     if (req.method === 'GET') {
         try {
-            console.log('[GET] Accessing flights');
-            const currentFlights = safeGet();
-            console.log('[GET] Retrieved flights:', currentFlights);
-            return res.status(200).json(currentFlights);
+            console.log('Current flights:', flights);
+            return res.status(200).json(flights || []);
         } catch (error) {
-            console.error('[GET] Error:', error);
+            console.error('GET Error:', error);
             return res.status(500).json({ message: 'Failed to fetch flights' });
         }
     }
@@ -27,22 +28,40 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
         try {
             const newFlight = req.body;
-            console.log('[POST] Received flight:', newFlight);
+            console.log('Received flight:', newFlight);
 
             if (!newFlight.time || !newFlight.callsign || !newFlight.type || !newFlight.destination) {
-                return res.status(400).json({
+                return res.status(400).json({ 
                     message: 'Missing required fields',
-                    received: newFlight
+                    received: newFlight 
                 });
             }
 
-            safePush(newFlight);
-            const updatedFlights = safeGet();
-            console.log('[POST] Updated flights:', updatedFlights);
-            return res.status(200).json(updatedFlights);
+            if (!Array.isArray(flights)) flights = [];
+            flights.push(newFlight);
+            console.log('Updated flights:', flights);
+
+            return res.status(200).json(flights);
         } catch (error) {
-            console.error('[POST] Error:', error);
+            console.error('POST Error:', error);
             return res.status(500).json({ message: 'Failed to add flight' });
+        }
+    }
+
+    if (req.method === 'DELETE') {
+        try {
+            const parts = req.url.split('/');
+            const index = parseInt(parts[parts.length - 1]);
+            
+            if (isNaN(index) || index < 0 || index >= flights.length) {
+                return res.status(400).json({ message: 'Invalid index' });
+            }
+
+            flights.splice(index, 1);
+            return res.status(200).json(flights);
+        } catch (error) {
+            console.error('DELETE Error:', error);
+            return res.status(500).json({ message: 'Failed to delete flight' });
         }
     }
 
