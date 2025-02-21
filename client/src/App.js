@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import FlightForm from './components/FlightForm';
 import FlightList from './components/FlightList';
+import FlightItem from './components/FlightItem';
 
 function App() {
   const [flights, setFlights] = useState([]);
