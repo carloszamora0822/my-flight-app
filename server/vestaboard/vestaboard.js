@@ -4,6 +4,11 @@ const axios = require('axios');
 const { VESTA_API_KEY, VESTA_BOARD_ID } = require('./config');
 
 async function updateVestaBoard(matrix) {
+  if (!VESTA_API_KEY || !VESTA_BOARD_ID) {
+    console.warn('Vestaboard credentials not configured - skipping update');
+    return null;
+  }
+
   const message = matrix.map(row => row.join(' ')).join('\n');
   console.log('Message to be sent to Vestaboard:', message);
 
@@ -24,7 +29,8 @@ async function updateVestaBoard(matrix) {
     return response.data;
   } catch (error) {
     console.error('Error updating Vestaboard:', error.response ? error.response.data : error);
-    throw error;
+    // Don't throw the error - let the app continue working even if Vestaboard fails
+    return null;
   }
 }
 
