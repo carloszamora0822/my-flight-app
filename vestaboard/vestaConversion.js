@@ -24,54 +24,48 @@ function getFormattedDate() {
 }
 
 function createHeaderRow() {
-    // Create header: CHECKRIDE MMDD
     const date = getFormattedDate();
-    const headerText = `CHECKRIDE ${date}`;
-    
-    // Pad to 22 characters with spaces
-    const paddedHeader = (headerText + ' '.repeat(22)).slice(0, 22);
-    
-    console.log('[MATRIX] Header string:', paddedHeader);
-    return stringToVestaboard(paddedHeader);
+    const header = ('CHECKRIDE ' + date).padEnd(22);
+    return stringToVestaboard(header);
 }
 
 function createFlightRow(flight) {
-    // Format each field with specific widths
-    const rowParts = [
-        padString(flight.time, 6),           // 6 chars for time
-        padString(flight.callsign, 8),       // 8 chars for callsign
-        padString(flight.type, 4),           // 4 chars for type
-        padString(flight.destination, 4)      // 4 chars for destination
-    ];
-    
-    const rowString = rowParts.join('');
-    console.log('[MATRIX] Flight row string:', rowString);
-    return stringToVestaboard(rowString);
+    // Format with exact spaces for alignment
+    const formatted = [
+        flight.time.padEnd(5),      // 5 chars
+        ' ',                        // 1 space
+        flight.callsign.padEnd(7),  // 7 chars
+        ' ',                        // 1 space
+        flight.type.padEnd(4),      // 4 chars
+        ' ',                        // 1 space
+        flight.destination.padEnd(3) // 3 chars (remaining space)
+    ].join('');
+
+    // Ensure exactly 22 characters
+    return stringToVestaboard(formatted.slice(0, 22));
 }
 
 export function createVestaMatrix(flights) {
-    console.log('[MATRIX] Creating matrix for flights:', flights);
-
-    // Create 6x22 matrix filled with spaces (code 0)
+    // Create base matrix with spaces (code 0)
     const matrix = Array(6).fill().map(() => Array(22).fill(0));
-    
+
     try {
-        // Set header row
-        const header = createHeaderRow();
-        matrix[0] = header.slice(0, 22);
-        
-        // Add flight rows (up to 5 flights)
+        // Row 0: Header
+        matrix[0] = createHeaderRow();
+
+        // Rows 1-5: Flights (max 5)
         flights.slice(0, 5).forEach((flight, index) => {
-            const row = createFlightRow(flight);
-            matrix[index + 1] = row.slice(0, 22);
+            matrix[index + 1] = createFlightRow(flight);
         });
 
-        // Log the final matrix in a readable format
-        console.log('[MATRIX] Final matrix rows:');
+        // Debug: Print human-readable version
+        console.log('Matrix Preview:');
         matrix.forEach((row, i) => {
-            console.log(`Row ${i}:`, row.map(code => 
-                Object.entries(VESTA_CHARS).find(([char, val]) => val === code)?.[0] || ' '
-            ).join(''));
+            const preview = row.map(code => 
+                Object.entries(VESTA_CHARS)
+                    .find(([_, val]) => val === code)?.[0] || ' '
+            ).join('');
+            console.log(`Row ${i}: "${preview}"`);
         });
 
         return matrix;

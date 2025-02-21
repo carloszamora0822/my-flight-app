@@ -2,58 +2,46 @@ import 'dotenv/config';
 
 export async function updateVestaboard(matrix) {
     console.log('[VESTA] Starting Vestaboard update...');
-    console.log('[VESTA] Environment check:', {
-        hasVestaKey: !!process.env.VESTA_API_KEY,
-        hasVestaboardKey: !!process.env.VESTABOARD_API_KEY,
-        env: process.env.NODE_ENV
-    });
-    
-    // Use VESTA_API_KEY instead of VESTABOARD_API_KEY
     const apiKey = process.env.VESTA_API_KEY;
     
     if (!apiKey) {
-        console.error('[VESTA] API Key missing. Available env vars:', Object.keys(process.env));
         throw new Error('VESTA_API_KEY not configured');
     }
-    console.log('[VESTA] API Key configured:', apiKey.substring(0, 4) + '...');
+
+    // Validate matrix format
+    if (!Array.isArray(matrix) || matrix.length !== 6 || 
+        !matrix.every(row => Array.isArray(row) && row.length === 22)) {
+        throw new Error('Invalid matrix format - must be 6x22');
+    }
+
+    // Ensure all values are valid Vestaboard codes (0-70)
+    const flatMatrix = matrix.flat();
+    if (!flatMatrix.every(code => Number.isInteger(code) && code >= 0 && code <= 70)) {
+        throw new Error('Invalid character codes - must be integers 0-70');
+    }
 
     try {
-        console.log('[VESTA] Preparing API request...');
-        const requestBody = { characters: matrix };
-        console.log('[VESTA] Request body:', JSON.stringify(requestBody, null, 2));
-
         const response = await fetch('https://rw.vestaboard.com/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Vestaboard-Read-Write-Key': apiKey
             },
-            body: JSON.stringify(requestBody)
+            body: JSON.stringify({
+                characters: matrix.map(row => 
+                    row.map(code => Math.min(Math.max(0, code), 70))
+                )
+            })
         });
-
-        console.log('[VESTA] API Response status:', response.status);
-        console.log('[VESTA] API Response headers:', Object.fromEntries(response.headers.entries()));
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('[VESTA] API Error:', {
-                status: response.status,
-                statusText: response.statusText,
-                body: errorText
-            });
-            throw new Error(`Vestaboard API error: ${response.status} - ${errorText}`);
+            const error = await response.text();
+            throw new Error(`Vestaboard API error: ${response.status} - ${error}`);
         }
 
-        const data = await response.json();
-        console.log('[VESTA] API Success:', data);
-        return data;
+        return await response.json();
     } catch (error) {
-        console.error('[VESTA] Error:', {
-            name: error.name,
-            message: error.message,
-            cause: error.cause,
-            stack: error.stack
-        });
+        console.error('[VESTA] Error:', error);
         throw error;
     }
 }
