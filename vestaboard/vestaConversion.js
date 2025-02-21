@@ -48,7 +48,7 @@ function createFlightRow(flight) {
     }
 }
 
-function createVestaMatrix(flights) {
+export function createVestaMatrix(flights) {
     console.log('Creating Vestaboard matrix for flights:', flights);
 
     if (!Array.isArray(flights)) {
@@ -71,5 +71,3 @@ function createVestaMatrix(flights) {
         throw error;
     }
 }
-
-module.exports = { createVestaMatrix };

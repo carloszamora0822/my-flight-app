@@ -1,4 +1,6 @@
-// In-memory storage (note: this resets on cold starts)
+import { createVestaMatrix } from '../../vestaboard/vestaConversion';
+import { updateVestaboard } from '../../vestaboard/vestaboard';
+
 let flights = [];
 
 export default async function handler(req, res) {
@@ -39,15 +41,15 @@ export default async function handler(req, res) {
 
             if (!Array.isArray(flights)) flights = [];
             flights.push(newFlight);
-            console.log('Updated flights:', flights);
 
-            // Trigger immediate Vestaboard update
-            const { updateBoard } = require('../../vestaboard/autoUpdate');
+            // Update Vestaboard
             try {
-                await updateBoard();
-                console.log('Vestaboard update triggered after POST');
+                const matrix = createVestaMatrix(flights);
+                await updateVestaboard(matrix);
+                console.log('Vestaboard updated after POST');
             } catch (vestaError) {
                 console.error('Vestaboard update failed:', vestaError);
+                // Continue with the response even if Vestaboard update fails
             }
 
             return res.status(200).json(flights);
@@ -59,8 +61,7 @@ export default async function handler(req, res) {
 
     if (req.method === 'DELETE') {
         try {
-            const parts = req.url.split('/');
-            const index = parseInt(parts[parts.length - 1]);
+            const index = parseInt(req.query.index);
             
             if (isNaN(index) || index < 0 || index >= flights.length) {
                 return res.status(400).json({ message: 'Invalid index' });
@@ -68,13 +69,14 @@ export default async function handler(req, res) {
 
             flights.splice(index, 1);
 
-            // Trigger immediate Vestaboard update
-            const { updateBoard } = require('../../vestaboard/autoUpdate');
+            // Update Vestaboard
             try {
-                await updateBoard();
-                console.log('Vestaboard update triggered after DELETE');
+                const matrix = createVestaMatrix(flights);
+                await updateVestaboard(matrix);
+                console.log('Vestaboard updated after DELETE');
             } catch (vestaError) {
                 console.error('Vestaboard update failed:', vestaError);
+                // Continue with the response even if Vestaboard update fails
             }
 
             return res.status(200).json(flights);
