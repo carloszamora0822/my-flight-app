@@ -8,32 +8,24 @@ const VESTA_CHARS = {
     ':': 50, "'": 52
 };
 
-function convertToVestaCode(text) {
-    return text.toString()
+function createFlightRow(flight) {
+    const time = flight.time.padEnd(5);
+    const callsign = flight.callsign.padEnd(7);
+    const type = flight.type.padEnd(4);
+    const destination = flight.destination.padEnd(6);
+    
+    return [...time, ...callsign, ...type, ...destination]
+        .join('')
         .toUpperCase()
         .split('')
         .map(char => VESTA_CHARS[char] || VESTA_CHARS[' ']);
 }
 
-function createFlightRow(flight) {
-    const time = convertToVestaCode(flight.time.padEnd(5));
-    const callsign = convertToVestaCode(flight.callsign.padEnd(7));
-    const type = convertToVestaCode(flight.type.padEnd(4));
-    const destination = convertToVestaCode(flight.destination.padEnd(6));
-    
-    return [...time, ...callsign, ...type, ...destination];
-}
-
 function createVestaMatrix(flights) {
-    // Create empty 6x22 matrix filled with spaces
     const matrix = Array(6).fill().map(() => Array(22).fill(0));
-    
-    // Fill with flight data (up to 6 flights)
     flights.slice(0, 6).forEach((flight, index) => {
-        const row = createFlightRow(flight);
-        matrix[index] = row;
+        matrix[index] = createFlightRow(flight);
     });
-    
     return matrix;
 }
 
