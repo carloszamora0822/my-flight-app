@@ -15,7 +15,7 @@ app.get('/api/flights', (req, res) => {
   try {
     res.json(flights);
   } catch (error) {
-    console.error('Error fetching flights:', error);
+    console.error('HTTP error 1: Error fetching flights:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
@@ -39,7 +39,7 @@ app.post('/api/flights', (req, res) => {
       .then(() => console.log('Vestaboard updated successfully after POST.'))
       .catch(err => console.error('Error updating Vestaboard after POST:', err));
   } catch (error) {
-    console.error('Error adding flight:', error);
+    console.error('HTTP error 2: Error adding flight:', error);
     console.error('Request body:', req.body);
     res.status(500).json({ error: 'Internal Server Error' });
   }
@@ -58,7 +58,7 @@ app.delete('/api/flights/:index', (req, res) => {
       .then(() => console.log('Vestaboard updated successfully after DELETE.'))
       .catch(err => console.error('Error updating Vestaboard after DELETE:', err));
   } catch (error) {
-    console.error('Error deleting flight:', error);
+    console.error('HTTP error 3: Error deleting flight:', error);
     console.error('Request params:', req.params);
     res.status(500).json({ error: 'Internal Server Error' });
   }

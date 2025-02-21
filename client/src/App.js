@@ -10,7 +10,7 @@ function App() {
     try {
       const response = await fetch(`${API_URL}/flights`);
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error 1! status: ${response.status}`);
       }
       const data = await response.json();
       console.log('Fetched flights:', data);
@@ -32,7 +32,7 @@ function App() {
         body: JSON.stringify(newFlight),
       });
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error 2! status: ${response.status}`);
       }
       const data = await response.json();
       setFlights(data);
@@ -47,7 +47,7 @@ function App() {
         method: 'DELETE',
       });
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error 3! status: ${response.status}`);
       }
       const data = await response.json();
       setFlights(data);
