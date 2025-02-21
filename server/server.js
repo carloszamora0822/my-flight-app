@@ -1,4 +1,5 @@
 // server/server.js
+require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
@@ -26,8 +27,10 @@ app.post('/api/flights', (req, res) => {
     while (flights.length > 5) {
       flights.shift();
     }
+    // Log current flights for debugging:
+    console.log('Current flights:', flights);
     res.json(flights);
-    // Trigger Vestaboard update after modifying flights.
+    // Now update Vestaboard in a non-blocking try/catch
     updateVestaboardFromData()
       .then(() => console.log('Vestaboard updated successfully after POST.'))
       .catch(err => console.error('Error updating Vestaboard after POST:', err));
@@ -45,7 +48,6 @@ app.delete('/api/flights/:index', (req, res) => {
   try {
     flights.splice(index, 1);
     res.json(flights);
-    // Trigger Vestaboard update after modifying flights.
     updateVestaboardFromData()
       .then(() => console.log('Vestaboard updated successfully after DELETE.'))
       .catch(err => console.error('Error updating Vestaboard after DELETE:', err));
