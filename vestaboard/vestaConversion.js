@@ -49,10 +49,11 @@ function createFlightRow(flight) {
 }
 
 export function createVestaMatrix(flights) {
-    console.log('Creating Vestaboard matrix for flights:', flights);
+    console.log('[MATRIX] Starting matrix creation...');
+    console.log('[MATRIX] Input flights:', JSON.stringify(flights, null, 2));
 
     if (!Array.isArray(flights)) {
-        console.error('Invalid flights data:', flights);
+        console.error('[MATRIX] Invalid flights data type:', typeof flights);
         throw new Error('Flights must be an array');
     }
 
@@ -60,14 +61,16 @@ export function createVestaMatrix(flights) {
     
     try {
         flights.slice(0, 6).forEach((flight, index) => {
-            console.log(`Processing flight ${index + 1}/${flights.length}`);
+            console.log(`[MATRIX] Processing flight ${index + 1}/${flights.length}`);
+            console.log('[MATRIX] Flight data:', flight);
             matrix[index] = createFlightRow(flight);
+            console.log('[MATRIX] Row created:', matrix[index]);
         });
 
-        console.log('Final Vestaboard matrix:', matrix);
+        console.log('[MATRIX] Final matrix:', JSON.stringify(matrix, null, 2));
         return matrix;
     } catch (error) {
-        console.error('Error creating Vestaboard matrix:', error);
+        console.error('[MATRIX] Error:', error);
         throw error;
     }
 }
