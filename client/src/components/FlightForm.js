@@ -6,7 +6,7 @@ function FlightForm({ addFlight }) {
   const [type, setType] = useState('PPL');
   const [destination, setDestination] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Validate time format (military time)
@@ -21,11 +21,16 @@ function FlightForm({ addFlight }) {
       return;
     }
 
-    addFlight({ time, callsign, type, destination });
-    setTime('');
-    setCallsign('');
-    setType('PPL');
-    setDestination('');
+    try {
+      await addFlight({ time, callsign, type, destination });
+      setTime('');
+      setCallsign('');
+      setType('PPL');
+      setDestination('');
+    } catch (error) {
+      console.error('Error adding flight:', error);
+      alert('Error adding flight. Please try again.');
+    }
   };
 
   return (

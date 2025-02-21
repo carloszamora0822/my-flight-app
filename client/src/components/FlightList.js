@@ -12,7 +12,14 @@ function FlightList({ flights, deleteFlight }) {
               <FlightItem
                 key={index}
                 flight={flight}
-                onDelete={() => deleteFlight(index)}
+                onDelete={async () => {
+                  try {
+                    await deleteFlight(index);
+                  } catch (error) {
+                    console.error('Error deleting flight:', error);
+                    alert('Error deleting flight. Please try again.');
+                  }
+                }}
               />
             ))}
           </ul>

@@ -35,7 +35,8 @@ app.post('/api/flights', (req, res) => {
       .then(() => console.log('Vestaboard updated successfully after POST.'))
       .catch(err => console.error('Error updating Vestaboard after POST:', err));
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error('Error adding flight:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
@@ -52,7 +53,8 @@ app.delete('/api/flights/:index', (req, res) => {
       .then(() => console.log('Vestaboard updated successfully after DELETE.'))
       .catch(err => console.error('Error updating Vestaboard after DELETE:', err));
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error('Error deleting flight:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
