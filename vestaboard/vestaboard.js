@@ -2,24 +2,36 @@ import 'dotenv/config';
 
 export async function updateVestaboard(matrix) {
     console.log('[VESTA] Starting Vestaboard update...');
+    console.log('[VESTA] Environment check:', {
+        hasVestaKey: !!process.env.VESTA_API_KEY,
+        hasVestaboardKey: !!process.env.VESTABOARD_API_KEY,
+        env: process.env.NODE_ENV
+    });
     
-    // Check environment variables
-    if (!process.env.VESTABOARD_API_KEY) {
-        console.error('[VESTA] Missing API key!');
-        throw new Error('VESTABOARD_API_KEY not configured');
+    // Use VESTA_API_KEY instead of VESTABOARD_API_KEY
+    const apiKey = process.env.VESTA_API_KEY;
+    
+    if (!apiKey) {
+        console.error('[VESTA] API Key missing. Available env vars:', Object.keys(process.env));
+        throw new Error('VESTA_API_KEY not configured');
     }
-    console.log('[VESTA] API Key configured:', process.env.VESTABOARD_API_KEY.substring(0, 4) + '...');
+    console.log('[VESTA] API Key configured:', apiKey.substring(0, 4) + '...');
 
     try {
         console.log('[VESTA] Preparing API request...');
-        const requestBody = { characters: matrix };
+        const requestBody = {
+            text: matrix.map(row => 
+                row.map(code => String.fromCharCode(code + 65).toUpperCase())
+                .join('')
+            ).join('\n')
+        };
         console.log('[VESTA] Request body:', JSON.stringify(requestBody, null, 2));
 
         const response = await fetch('https://rw.vestaboard.com/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Vestaboard-Read-Write-Key': process.env.VESTABOARD_API_KEY
+                'X-Vestaboard-Read-Write-Key': apiKey
             },
             body: JSON.stringify(requestBody)
         });

@@ -32,10 +32,16 @@ export default async function handler(req, res) {
             const newFlight = req.body;
             console.log('🛫 Received new flight:', newFlight);
 
-            // Validate env vars first
-            if (!process.env.VESTABOARD_API_KEY) {
-                console.error('❌ VESTABOARD_API_KEY is not configured!');
-                // Still add the flight but warn about Vestaboard
+            // Check both possible environment variable names
+            const apiKey = process.env.VESTA_API_KEY || process.env.VESTABOARD_API_KEY;
+            console.log('🔑 Environment check:', {
+                hasVestaKey: !!process.env.VESTA_API_KEY,
+                hasVestaboardKey: !!process.env.VESTABOARD_API_KEY,
+                finalKey: apiKey ? '✅ Present' : '❌ Missing'
+            });
+
+            if (!apiKey) {
+                console.error('❌ Vestaboard API key not found');
                 flights.push(newFlight);
                 return res.status(200).json({
                     flights,
