@@ -63,11 +63,17 @@ export default async function handler(req, res) {
 
     if (req.method === 'DELETE') {
         try {
-            const index = parseInt(req.query.index);
+            // Extract index from URL path instead of query params
+            const indexStr = req.url.split('/').pop();
+            const index = parseInt(indexStr);
             console.log('🗑️ Deleting flight at index:', index);
             
             if (isNaN(index) || index < 0 || index >= flights.length) {
-                return res.status(400).json({ message: 'Invalid index' });
+                console.error('❌ Invalid index:', index);
+                return res.status(400).json({ 
+                    success: false,
+                    message: `Invalid index: ${index}` 
+                });
             }
 
             // Remove the flight
@@ -86,7 +92,6 @@ export default async function handler(req, res) {
                 vestaStatus = vestaError.message;
             }
 
-            // Return same format as POST response
             return res.status(200).json({
                 success: true,
                 flights: flights,
@@ -94,7 +99,10 @@ export default async function handler(req, res) {
             });
         } catch (error) {
             console.error('❌ DELETE Error:', error);
-            return res.status(500).json({ message: 'Failed to delete flight' });
+            return res.status(500).json({ 
+                success: false, 
+                message: 'Failed to delete flight' 
+            });
         }
     }
 

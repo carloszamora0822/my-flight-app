@@ -41,16 +41,20 @@ function App() {
 
   const deleteFlight = async (index) => {
     try {
+      console.log('Deleting flight at index:', index);
       const response = await fetch(`/api/flights/${index}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
+      
       const data = await response.json();
       console.log('Delete response:', data);
       
-      // Update flights state with the new data
-      setFlights(data.flights || []);
-      
-      if (!data.success) {
+      if (data.success) {
+        setFlights(data.flights || []);
+      } else {
         throw new Error(data.message || 'Failed to delete flight');
       }
     } catch (error) {
