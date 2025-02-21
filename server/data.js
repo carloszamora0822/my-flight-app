@@ -1,12 +1,20 @@
+// In-memory storage (note: this will reset on serverless function cold starts)
 let flights = [];
 
 const safePush = (flight) => {
-    console.log('SafePush called with:', flight);
-    if (!Array.isArray(flights)) {
-        flights = [];
+    try {
+        console.log('SafePush: Current flights:', flights);
+        if (!Array.isArray(flights)) {
+            flights = [];
+        }
+        flights.push(flight);
+        console.log('SafePush: Updated flights:', flights);
+        return true;
+    } catch (error) {
+        console.error('SafePush Error:', error);
+        flights = [flight]; // Reset and add new flight
+        return true;
     }
-    flights.push(flight);
-    console.log('Current flights after push:', flights);
 };
 
 const safeGet = () => {
