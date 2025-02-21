@@ -17,24 +17,23 @@ function App() {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-        },
-        mode: 'cors' // Add explicit CORS mode
+        }
       });
       
       console.log('GET response status:', response.status);
+      const data = await response.json();
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        throw new Error(data.message || 'Failed to fetch flights');
       }
       
-      const data = await response.json();
       console.log('Fetched flights:', data);
       setFlights(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error fetching flights:', error);
-      setFlights([]); // Set empty array on error
+      console.error('Error fetching flights:', error.message);
+      setFlights([]);
     }
-  }, []);
+  }, [API_URL]);
 
   useEffect(() => {
     fetchFlights();
@@ -43,8 +42,7 @@ function App() {
   const addFlight = async (newFlight) => {
     try {
       const url = `${API_URL}/flights`;
-      console.log('Sending POST request to:', url);
-      console.log('POST data:', newFlight);
+      console.log('Sending POST request to:', url, newFlight);
       
       const response = await fetch(url, {
         method: 'POST',
@@ -52,22 +50,20 @@ function App() {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
-        mode: 'cors', // Add explicit CORS mode
         body: JSON.stringify(newFlight),
       });
       
-      console.log('POST response status:', response.status);
+      const data = await response.json();
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        throw new Error(data.message || 'Failed to add flight');
       }
       
-      const data = await response.json();
-      console.log('POST response data:', data);
+      console.log('POST success:', data);
       setFlights(Array.isArray(data) ? data : []);
       return data;
     } catch (error) {
-      console.error('Error adding flight:', error);
+      console.error('Error adding flight:', error.message);
       throw error;
     }
   };

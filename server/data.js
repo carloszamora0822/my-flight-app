@@ -1,24 +1,24 @@
-const flights = [];
+let flights = [];
 
-// Add error handling for array operations
 const safePush = (flight) => {
-  if (!Array.isArray(flights)) {
-    console.error('flights is not an array');
-    throw new Error('Invalid flights data structure');
-  }
-  flights.push(flight);
+    console.log('SafePush called with:', flight);
+    if (!Array.isArray(flights)) {
+        flights = [];
+    }
+    flights.push(flight);
+    console.log('Current flights after push:', flights);
 };
 
 const safeGet = () => {
-  if (!Array.isArray(flights)) {
-    console.error('flights is not an array');
-    return [];
-  }
-  return flights;
+    console.log('SafeGet called, current flights:', flights);
+    if (!Array.isArray(flights)) {
+        flights = [];
+    }
+    return [...flights];
 };
 
 module.exports = { 
-  flights,
-  safePush,
-  safeGet
+    flights,
+    safePush,
+    safeGet
 };
