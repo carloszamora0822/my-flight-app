@@ -4,7 +4,6 @@ const axios = require('axios');
 const { VESTA_API_KEY, VESTA_BOARD_ID } = require('./config');
 
 async function updateVestaBoard(matrix) {
-  // Format the matrix: join each row's numbers with spaces, then join rows with newline characters.
   const message = matrix.map(row => row.join(' ')).join('\n');
   console.log('Message to be sent to Vestaboard:', message);
 

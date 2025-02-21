@@ -14,7 +14,10 @@ function FlightList({ flights, deleteFlight }) {
                 flight={flight}
                 onDelete={async () => {
                   try {
-                    await deleteFlight(index);
+                    const response = await deleteFlight(index);
+                    if (!response.ok) {
+                      throw new Error('Failed to delete flight');
+                    }
                   } catch (error) {
                     console.error('Error deleting flight:', error);
                     alert('Error deleting flight. Please try again.');

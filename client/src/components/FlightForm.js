@@ -22,7 +22,8 @@ function FlightForm({ addFlight }) {
     }
 
     try {
-      await addFlight({ time, callsign, type, destination });
+      const response = await addFlight({ time, callsign, type, destination });
+      console.log('Flight added successfully:', response);
       setTime('');
       setCallsign('');
       setType('PPL');
