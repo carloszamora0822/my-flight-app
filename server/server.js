@@ -5,7 +5,7 @@ const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 3001;
 
-const { flights } = require('./data');
+const { flights, safeGet, safePush } = require('./data');
 const { updateVestaboardFromData } = require('./vestaboard/autoUpdate');
 
 app.use(cors());
@@ -13,8 +13,9 @@ app.use(express.json());
 
 app.get('/api/flights', (req, res) => {
   try {
-    console.log('GET /api/flights - Current flights:', flights);
-    res.json(flights || []);
+    const currentFlights = safeGet();
+    console.log('GET /api/flights - Current flights:', currentFlights);
+    res.json(currentFlights);
   } catch (error) {
     console.error('HTTP error 1: Error fetching flights:', error);
     res.status(500).json({ error: 'Internal Server Error', details: error.message });
@@ -31,19 +32,16 @@ app.post('/api/flights', async (req, res) => {
   }
   
   try {
-    flights.push(newFlight);
+    safePush(newFlight);
     while (flights.length > 5) {
       flights.shift();
     }
     console.log('Current flights after adding:', flights);
     
-    try {
-      await updateVestaboardFromData();
-      console.log('Vestaboard updated successfully');
-    } catch (vestaError) {
-      console.error('Vestaboard update error:', vestaError);
-      // Continue with the response even if Vestaboard update fails
-    }
+    // Make Vestaboard update non-blocking and optional
+    updateVestaboardFromData().catch(err => {
+      console.warn('Non-critical Vestaboard update error:', err);
+    });
     
     res.json(flights);
   } catch (error) {

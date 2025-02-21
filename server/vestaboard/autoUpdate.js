@@ -1,25 +1,19 @@
-// server/vestaboard/autoUpdate.js
-
-const { flights } = require('../data');
+const { flights, safeGet } = require('../data');
 const { convertFlightsToMatrix } = require('./vestaConversion');
 const { updateVestaBoard } = require('./vestaboard');
 
 async function updateVestaboardFromData() {
   try {
-    if (!Array.isArray(flights)) {
-      throw new Error('Flights data is not an array');
-    }
+    const currentFlights = safeGet();
+    const matrix = convertFlightsToMatrix(currentFlights);
     
-    const matrix = convertFlightsToMatrix(flights);
-    if (!matrix || !Array.isArray(matrix)) {
-      throw new Error('Invalid matrix generated');
-    }
-    
-    console.log('Attempting to update Vestaboard with matrix:', matrix);
-    return await updateVestaBoard(matrix);
+    // Make the update completely optional
+    return await updateVestaBoard(matrix).catch(err => {
+      console.warn('Non-critical Vestaboard update error:', err);
+      return null;
+    });
   } catch (error) {
-    console.error('Error in updateVestaboardFromData:', error);
-    // Don't throw the error - let the app continue working even if Vestaboard fails
+    console.warn('Non-critical error in updateVestaboardFromData:', error);
     return null;
   }
 }
