@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import FlightForm from './components/FlightForm';
 import FlightList from './components/FlightList';
-import FlightItem from './components/FlightItem';
 
 function App() {
   const [flights, setFlights] = useState([]);
@@ -56,15 +55,10 @@ function App() {
     <div className="App">
       <h1>Flight Schedule</h1>
       <FlightForm addFlight={addFlight} />
-      <div className="flights-list">
-        {flights.map((flight, index) => (
-          <FlightItem 
-            key={index}
-            flight={flight}
-            onDelete={() => deleteFlight(index)}
-          />
-        ))}
-      </div>
+      <FlightList 
+        flights={flights} 
+        deleteFlight={deleteFlight}
+      />
     </div>
   );
 }

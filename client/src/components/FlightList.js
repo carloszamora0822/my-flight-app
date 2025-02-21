@@ -2,36 +2,24 @@ import React from 'react';
 import FlightItem from './FlightItem';
 
 function FlightList({ flights, deleteFlight }) {
-  return (
-    <div className="recent-submissions">
-      <h2>Recent Flights</h2>
-      <div className="history-list">
-        {flights.length > 0 ? (
-          <ul>
-            {flights.map((flight, index) => (
-              <FlightItem
-                key={index}
-                flight={flight}
-                onDelete={async () => {
-                  try {
-                    const response = await deleteFlight(index);
-                    if (!response.ok) {
-                      throw new Error('Failed to delete flight');
-                    }
-                  } catch (error) {
-                    console.error('Error deleting flight:', error);
-                    alert('Error deleting flight. Please try again.');
-                  }
-                }}
-              />
-            ))}
-          </ul>
-        ) : (
-          <p>No flights available</p>
-        )}
-      </div>
-    </div>
-  );
+    return (
+        <div className="recent-submissions">
+            <h2>Recent Flights</h2>
+            <div className="flights-list">
+                {flights.length > 0 ? (
+                    flights.map((flight, index) => (
+                        <FlightItem
+                            key={index}
+                            flight={flight}
+                            onDelete={() => deleteFlight(index)}
+                        />
+                    ))
+                ) : (
+                    <p>No flights available</p>
+                )}
+            </div>
+        </div>
+    );
 }
 
 export default FlightList;
