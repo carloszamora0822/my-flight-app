@@ -45,9 +45,17 @@ function App() {
         method: 'DELETE'
       });
       const data = await response.json();
-      setFlights(data);
+      console.log('Delete response:', data);
+      
+      // Update flights state with the new data
+      setFlights(data.flights || []);
+      
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to delete flight');
+      }
     } catch (error) {
       console.error('Error deleting flight:', error);
+      alert('Error deleting flight. Please try again.');
     }
   };
 

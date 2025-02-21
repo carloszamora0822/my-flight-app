@@ -64,26 +64,36 @@ export default async function handler(req, res) {
     if (req.method === 'DELETE') {
         try {
             const index = parseInt(req.query.index);
+            console.log('🗑️ Deleting flight at index:', index);
             
             if (isNaN(index) || index < 0 || index >= flights.length) {
                 return res.status(400).json({ message: 'Invalid index' });
             }
 
+            // Remove the flight
             flights.splice(index, 1);
+            console.log('✅ Flight removed, remaining flights:', flights);
 
             // Update Vestaboard
+            let vestaStatus = null;
             try {
                 const matrix = createVestaMatrix(flights);
                 await updateVestaboard(matrix);
-                console.log('Vestaboard updated after DELETE');
+                vestaStatus = 'success';
+                console.log('✨ Vestaboard updated after DELETE');
             } catch (vestaError) {
-                console.error('Vestaboard update failed:', vestaError);
-                // Continue with the response even if Vestaboard update fails
+                console.error('❌ Vestaboard update failed:', vestaError);
+                vestaStatus = vestaError.message;
             }
 
-            return res.status(200).json(flights);
+            // Return same format as POST response
+            return res.status(200).json({
+                success: true,
+                flights: flights,
+                vestaboard: vestaStatus
+            });
         } catch (error) {
-            console.error('DELETE Error:', error);
+            console.error('❌ DELETE Error:', error);
             return res.status(500).json({ message: 'Failed to delete flight' });
         }
     }
