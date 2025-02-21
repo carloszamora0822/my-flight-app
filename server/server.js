@@ -3,35 +3,37 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const port = process.env.PORT || 3001;
 
 const { flights, safeGet, safePush } = require('./data');
 const { updateVestaboardFromData } = require('./vestaboard/autoUpdate');
 
-// Updated CORS configuration
+// Updated CORS configuration for Vercel
 app.use(cors({
-    origin: 'http://localhost:3000',
-    methods: ['GET', 'POST', 'DELETE'],
-    allowedHeaders: ['Content-Type']
+    origin: '*', // Be more specific in production
+    methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Accept'],
 }));
 
 app.use(express.json());
 
-// Add error handling middleware
+// Pre-flight requests
+app.options('*', cors());
+
+// Add error handling middleware at the top
 app.use((err, req, res, next) => {
     console.error('Server error:', err);
     res.status(500).json({ error: err.message });
 });
 
 app.get('/api/flights', (req, res) => {
-  try {
-    const currentFlights = safeGet();
-    console.log('GET /api/flights - Current flights:', currentFlights);
-    res.json(currentFlights);
-  } catch (error) {
-    console.error('HTTP error 1: Error fetching flights:', error);
-    res.status(500).json({ error: 'Internal Server Error', details: error.message });
-  }
+    try {
+        const currentFlights = safeGet();
+        console.log('GET /api/flights - Current flights:', currentFlights);
+        res.json(currentFlights || []);
+    } catch (error) {
+        console.error('GET error:', error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
 app.post('/api/flights', async (req, res) => {
@@ -82,6 +84,6 @@ app.delete('/api/flights/:index', (req, res) => {
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+// Remove app.listen as Vercel uses serverless functions
+// Instead, export the app
+module.exports = app;
