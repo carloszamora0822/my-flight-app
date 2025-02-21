@@ -19,12 +19,7 @@ export async function updateVestaboard(matrix) {
 
     try {
         console.log('[VESTA] Preparing API request...');
-        const requestBody = {
-            text: matrix.map(row => 
-                row.map(code => String.fromCharCode(code + 65).toUpperCase())
-                .join('')
-            ).join('\n')
-        };
+        const requestBody = { characters: matrix };
         console.log('[VESTA] Request body:', JSON.stringify(requestBody, null, 2));
 
         const response = await fetch('https://rw.vestaboard.com/', {
