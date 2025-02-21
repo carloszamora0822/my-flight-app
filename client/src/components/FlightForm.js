@@ -17,7 +17,7 @@ function FlightForm({ addFlight }) {
     }
 
     if (callsign.length > 6 || destination.length > 6) {
-      alert("Callsign and destination must be 6 characters or less");
+      alert("Name and Flight Number must be 6 characters or less");
       return;
     }
 
