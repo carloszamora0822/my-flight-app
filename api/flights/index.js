@@ -71,7 +71,7 @@ export default async function handler(req, res) {
                 flights: flights
             });
         } catch (error) {
-            return res.status 500).json({ message: 'Failed to delete flight' });
+            return res.status(500).json({ message: 'Failed to delete flight' });
         }
     }
 
