@@ -9,6 +9,6 @@ function FlightItem({ flight, onDelete }) {
       <button onClick={onDelete}>Delete</button>
     </div>
   );
-}
+}//
 
 export default FlightItem;
