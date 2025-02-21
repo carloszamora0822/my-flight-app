@@ -7,15 +7,23 @@ const { updateVestaboard } = require('./vestaboard');
 let updateTimeout = null;
 
 async function updateBoard() {
+    console.log('Starting Vestaboard board update...');
+    
     try {
-        console.log('Creating Vestaboard matrix from flights:', flights);
+        if (!flights || !Array.isArray(flights)) {
+            console.error('Invalid flights data:', flights);
+            throw new Error('Flights data is not valid');
+        }
+
+        console.log(`Processing ${flights.length} flights...`);
         const matrix = createVestaMatrix(flights);
-        console.log('Generated matrix:', matrix);
         
+        console.log('Matrix created successfully, updating Vestaboard...');
         await updateVestaboard(matrix);
+        
         console.log('Vestaboard update completed successfully');
     } catch (error) {
-        console.error('Failed to update Vestaboard:', {
+        console.error('Vestaboard Update Failed:', {
             error: error.message,
             stack: error.stack,
             flights: flights
@@ -30,17 +38,23 @@ const debouncedUpdate = (...args) => {
 
 function watchFlightsData() {
     const dataPath = path.resolve(__dirname, '../data.js');
+    console.log('Setting up file watch for:', dataPath);
+
     try {
-        console.log('Starting flight data watch on:', dataPath);
         watch(dataPath, (eventType) => {
+            console.log(`File event detected: ${eventType}`);
             if (eventType === 'change') {
-                console.log('Detected change in flights data file');
+                console.log('Processing file change...');
                 try {
                     delete require.cache[require.resolve('../data')];
-                    console.log('Cleared require cache for data.js');
+                    console.log('Cleared module cache');
                     debouncedUpdate();
+                    console.log('Triggered update');
                 } catch (error) {
-                    console.error('Error processing file change:', error);
+                    console.error('Error handling file change:', {
+                        error: error.message,
+                        path: dataPath
+                    });
                 }
             }
         });

@@ -40,12 +40,16 @@ app.post('/api/flights', async (req, res) => {
         safePush(newFlight);
         console.log('[POST] Updated flights array:', flights);
         
-        // Trigger Vestaboard update
-        const { updateBoard } = require('./utils/autoUpdate');
-        await updateBoard();
+        // Trigger immediate Vestaboard update
+        const { updateBoard } = require('../vestaboard/autoUpdate');
+        try {
+            await updateBoard();
+            console.log('[POST] Vestaboard update triggered successfully');
+        } catch (vestaError) {
+            console.error('[POST] Vestaboard update failed:', vestaError);
+        }
         
         return res.status(200).json(flights);
-        
     } catch (error) {
         console.error('[POST] Error:', error);
         return res.status(500).json({ message: error.message });
@@ -62,9 +66,14 @@ app.delete('/api/flights/:index', async (req, res) => {
 
         flights.splice(index, 1);
         
-        // Trigger Vestaboard update
-        const { updateBoard } = require('./utils/autoUpdate');
-        await updateBoard();
+        // Trigger immediate Vestaboard update
+        const { updateBoard } = require('../vestaboard/autoUpdate');
+        try {
+            await updateBoard();
+            console.log('[DELETE] Vestaboard update triggered successfully');
+        } catch (vestaError) {
+            console.error('[DELETE] Vestaboard update failed:', vestaError);
+        }
         
         return res.status(200).json(flights);
     } catch (error) {
