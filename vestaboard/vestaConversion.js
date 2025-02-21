@@ -8,61 +8,72 @@ const VESTA_CHARS = {
     ':': 50, "'": 52
 };
 
-function createHeaderRow() {
-    // Create header: TIME | CALLSIGN | TYPE | DEST
-    const header = 'TIME CALLSIGN TYPE DEST'.split('')
-        .map(char => VESTA_CHARS[char] || VESTA_CHARS[' ']);
-    console.log('[MATRIX] Header created:', header);
-    return header;
+function padString(str, length) {
+    return (str + ' '.repeat(length)).slice(0, length);
 }
 
-function formatFlightData(flight) {
-    // Format: [TIME] [CALLSIGN] [TYPE] [DEST]
-    const time = flight.time.padEnd(4);           // 4 chars for time
-    const callsign = flight.callsign.padEnd(8);   // 8 chars for callsign
-    const type = flight.type.padEnd(4);           // 4 chars for type
-    const dest = flight.destination.padEnd(6);    // 6 chars for destination
+function stringToVestaboard(str) {
+    return str.toUpperCase().split('').map(char => VESTA_CHARS[char] || VESTA_CHARS[' ']);
+}
 
-    const formatted = `${time} ${callsign} ${type} ${dest}`;
-    console.log('[MATRIX] Formatted flight data:', formatted);
-    return formatted;
+function getFormattedDate() {
+    const today = new Date();
+    const month = (today.getMonth() + 1).toString().padStart(2, '0');
+    const day = today.getDate().toString().padStart(2, '0');
+    return `${month}${day}`;
+}
+
+function createHeaderRow() {
+    // Create header: CHECKRIDE MMDD
+    const date = getFormattedDate();
+    const headerText = `CHECKRIDE ${date}`;
+    
+    // Pad to 22 characters with spaces
+    const paddedHeader = (headerText + ' '.repeat(22)).slice(0, 22);
+    
+    console.log('[MATRIX] Header string:', paddedHeader);
+    return stringToVestaboard(paddedHeader);
 }
 
 function createFlightRow(flight) {
-    console.log('[MATRIX] Creating row for flight:', flight);
+    // Format each field with specific widths
+    const rowParts = [
+        padString(flight.time, 6),           // 6 chars for time
+        padString(flight.callsign, 8),       // 8 chars for callsign
+        padString(flight.type, 4),           // 4 chars for type
+        padString(flight.destination, 4)      // 4 chars for destination
+    ];
     
-    const formattedData = formatFlightData(flight);
-    const row = formattedData
-        .split('')
-        .map(char => {
-            const code = VESTA_CHARS[char.toUpperCase()];
-            if (code === undefined) {
-                console.warn(`Invalid char "${char}", using space`);
-                return VESTA_CHARS[' '];
-            }
-            return code;
-        });
-
-    console.log('[MATRIX] Created row:', row);
-    return row;
+    const rowString = rowParts.join('');
+    console.log('[MATRIX] Flight row string:', rowString);
+    return stringToVestaboard(rowString);
 }
 
 export function createVestaMatrix(flights) {
     console.log('[MATRIX] Creating matrix for flights:', flights);
 
-    // Initialize 6x22 matrix with spaces
-    const matrix = Array(6).fill().map(() => Array(22).fill(VESTA_CHARS[' ']));
+    // Create 6x22 matrix filled with spaces (code 0)
+    const matrix = Array(6).fill().map(() => Array(22).fill(0));
     
     try {
         // Set header row
-        matrix[0] = createHeaderRow();
+        const header = createHeaderRow();
+        matrix[0] = header.slice(0, 22);
         
-        // Add flight rows
+        // Add flight rows (up to 5 flights)
         flights.slice(0, 5).forEach((flight, index) => {
-            matrix[index + 1] = createFlightRow(flight);
+            const row = createFlightRow(flight);
+            matrix[index + 1] = row.slice(0, 22);
         });
 
-        console.log('[MATRIX] Final matrix:', matrix);
+        // Log the final matrix in a readable format
+        console.log('[MATRIX] Final matrix rows:');
+        matrix.forEach((row, i) => {
+            console.log(`Row ${i}:`, row.map(code => 
+                Object.entries(VESTA_CHARS).find(([char, val]) => val === code)?.[0] || ' '
+            ).join(''));
+        });
+
         return matrix;
     } catch (error) {
         console.error('[MATRIX] Error:', error);
