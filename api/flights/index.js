@@ -30,51 +30,28 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
         try {
             const newFlight = req.body;
-            console.log('🛫 Received new flight:', newFlight);
+            console.log('🛫 New flight:', newFlight);
 
-            // Check both possible environment variable names
-            const apiKey = process.env.VESTA_API_KEY || process.env.VESTABOARD_API_KEY;
-            console.log('🔑 Environment check:', {
-                hasVestaKey: !!process.env.VESTA_API_KEY,
-                hasVestaboardKey: !!process.env.VESTABOARD_API_KEY,
-                finalKey: apiKey ? '✅ Present' : '❌ Missing'
-            });
-
-            if (!apiKey) {
-                console.error('❌ Vestaboard API key not found');
-                flights.push(newFlight);
-                return res.status(200).json({
-                    flights,
-                    warning: 'Flight added but Vestaboard update failed - Missing API key'
-                });
-            }
-
-            // Add flight to array
+            if (!Array.isArray(flights)) flights = [];
             flights.push(newFlight);
-            console.log('✅ Flight added to array');
 
             // Attempt Vestaboard update
+            let vestaStatus = null;
             try {
-                console.log('🎯 Creating Vestaboard matrix...');
                 const matrix = createVestaMatrix(flights);
-                console.log('📊 Matrix created:', matrix);
-
-                console.log('📡 Sending to Vestaboard...');
-                const vestaResult = await updateVestaboard(matrix);
-                console.log('✨ Vestaboard updated successfully:', vestaResult);
-
-                return res.status(200).json({
-                    flights,
-                    vestaboard: 'updated'
-                });
+                await updateVestaboard(matrix);
+                vestaStatus = 'success';
             } catch (vestaError) {
                 console.error('❌ Vestaboard Error:', vestaError);
-                // Return flights but with warning
-                return res.status(200).json({
-                    flights,
-                    warning: `Flight added but Vestaboard update failed: ${vestaError.message}`
-                });
+                vestaStatus = vestaError.message;
             }
+
+            // Always return the flights array as the main response
+            return res.status(200).json({
+                success: true,
+                flights: flights,
+                vestaboard: vestaStatus
+            });
         } catch (error) {
             console.error('❌ General Error:', error);
             return res.status(500).json({ 

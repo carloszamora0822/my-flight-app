@@ -8,66 +8,61 @@ const VESTA_CHARS = {
     ':': 50, "'": 52
 };
 
+function createHeaderRow() {
+    // Create header: TIME | CALLSIGN | TYPE | DEST
+    const header = 'TIME CALLSIGN TYPE DEST'.split('')
+        .map(char => VESTA_CHARS[char] || VESTA_CHARS[' ']);
+    console.log('[MATRIX] Header created:', header);
+    return header;
+}
+
+function formatFlightData(flight) {
+    // Format: [TIME] [CALLSIGN] [TYPE] [DEST]
+    const time = flight.time.padEnd(4);           // 4 chars for time
+    const callsign = flight.callsign.padEnd(8);   // 8 chars for callsign
+    const type = flight.type.padEnd(4);           // 4 chars for type
+    const dest = flight.destination.padEnd(6);    // 6 chars for destination
+
+    const formatted = `${time} ${callsign} ${type} ${dest}`;
+    console.log('[MATRIX] Formatted flight data:', formatted);
+    return formatted;
+}
+
 function createFlightRow(flight) {
-    console.log('Creating Vestaboard row for flight:', flight);
+    console.log('[MATRIX] Creating row for flight:', flight);
     
-    if (!flight.time || !flight.callsign || !flight.type || !flight.destination) {
-        console.error('Invalid flight data:', flight);
-        throw new Error('Flight missing required fields');
-    }
+    const formattedData = formatFlightData(flight);
+    const row = formattedData
+        .split('')
+        .map(char => {
+            const code = VESTA_CHARS[char.toUpperCase()];
+            if (code === undefined) {
+                console.warn(`Invalid char "${char}", using space`);
+                return VESTA_CHARS[' '];
+            }
+            return code;
+        });
 
-    try {
-        const time = flight.time.padEnd(5);
-        const callsign = flight.callsign.padEnd(7);
-        const type = flight.type.padEnd(4);
-        const destination = flight.destination.padEnd(6);
-        
-        const row = [...time, ...callsign, ...type, ...destination]
-            .join('')
-            .toUpperCase()
-            .split('')
-            .map(char => {
-                const code = VESTA_CHARS[char];
-                if (code === undefined) {
-                    console.warn(`Invalid character found: "${char}", replacing with space`);
-                    return VESTA_CHARS[' '];
-                }
-                return code;
-            });
-
-        if (row.length !== 22) {
-            console.error('Invalid row length:', row.length);
-            throw new Error('Row must be exactly 22 characters');
-        }
-
-        console.log('Created Vestaboard row:', row);
-        return row;
-    } catch (error) {
-        console.error('Error creating flight row:', error);
-        throw error;
-    }
+    console.log('[MATRIX] Created row:', row);
+    return row;
 }
 
 export function createVestaMatrix(flights) {
-    console.log('[MATRIX] Starting matrix creation...');
-    console.log('[MATRIX] Input flights:', JSON.stringify(flights, null, 2));
+    console.log('[MATRIX] Creating matrix for flights:', flights);
 
-    if (!Array.isArray(flights)) {
-        console.error('[MATRIX] Invalid flights data type:', typeof flights);
-        throw new Error('Flights must be an array');
-    }
-
-    const matrix = Array(6).fill().map(() => Array(22).fill(0));
+    // Initialize 6x22 matrix with spaces
+    const matrix = Array(6).fill().map(() => Array(22).fill(VESTA_CHARS[' ']));
     
     try {
-        flights.slice(0, 6).forEach((flight, index) => {
-            console.log(`[MATRIX] Processing flight ${index + 1}/${flights.length}`);
-            console.log('[MATRIX] Flight data:', flight);
-            matrix[index] = createFlightRow(flight);
-            console.log('[MATRIX] Row created:', matrix[index]);
+        // Set header row
+        matrix[0] = createHeaderRow();
+        
+        // Add flight rows
+        flights.slice(0, 5).forEach((flight, index) => {
+            matrix[index + 1] = createFlightRow(flight);
         });
 
-        console.log('[MATRIX] Final matrix:', JSON.stringify(matrix, null, 2));
+        console.log('[MATRIX] Final matrix:', matrix);
         return matrix;
     } catch (error) {
         console.error('[MATRIX] Error:', error);
