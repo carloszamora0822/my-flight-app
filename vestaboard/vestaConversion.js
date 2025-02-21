@@ -45,61 +45,40 @@ function createFlightRow(flight) {
 }
 
 export function createVestaMatrix(flights) {
-    // Initialize 6x22 matrix with zeros
     const matrix = [
-        Array(22).fill(0),  // Header row
-        Array(22).fill(0),  // Flight 1
-        Array(22).fill(0),  // Flight 2
-        Array(22).fill(0),  // Flight 3
-        Array(22).fill(0),  // Flight 4
-        Array(22).fill(0)   // Flight 5
+        Array(22).fill(0),  // header
+        Array(22).fill(0),  // flight 1
+        Array(22).fill(0),  // flight 2
+        Array(22).fill(0),  // flight 3
+        Array(22).fill(0),  // flight 4
+        Array(22).fill(0)   // flight 5
     ];
 
-    // Create header "CHECKRIDE" aligned left
+    // add header
     const header = 'CHECKRIDE'.split('').map(char => VESTA_CHARS[char.toUpperCase()] || 0);
     matrix[0] = [...header, ...Array(22 - header.length).fill(0)];
 
-    // Add flights (max 5)
+    // add flights
     flights.slice(0, 5).forEach((flight, index) => {
         const rowIndex = index + 1;
         
-        // Convert each part to Vesta codes
         const timeStr = flight.time.padEnd(4);
         const callStr = flight.callsign.toUpperCase().padEnd(6);
         const typeStr = flight.type.toUpperCase().padEnd(3);
         const destStr = flight.destination.toUpperCase().padEnd(6);
 
-        // Convert each part to codes with single spaces between
-        const timeCodes = timeStr.split('').map(c => VESTA_CHARS[c] || 0);
-        const callCodes = callStr.split('').map(c => VESTA_CHARS[c] || 0);
-        const typeCodes = typeStr.split('').map(c => VESTA_CHARS[c] || 0);
-        const destCodes = destStr.split('').map(c => VESTA_CHARS[c] || 0);
-
-        // Combine with single spaces between sections
         const row = [
-            ...timeCodes,       // 4 chars
-            0,                  // 1 space
-            ...callCodes,       // 6 chars
-            0,                  // 1 space
-            ...typeCodes,       // 3 chars
-            0,                  // 1 space
-            ...destCodes        // 6 chars
-        ];
+            ...timeStr.split('').map(c => VESTA_CHARS[c] || 0),
+            0,  // space
+            ...callStr.split('').map(c => VESTA_CHARS[c] || 0),
+            0,  // space
+            ...typeStr.split('').map(c => VESTA_CHARS[c] || 0),
+            0,  // space
+            ...destStr.split('').map(c => VESTA_CHARS[c] || 0),
+            ...Array(22).fill(0)
+        ].slice(0, 22);
 
-        // Ensure exactly 22 characters
-        matrix[rowIndex] = row.slice(0, 22);
-        while (matrix[rowIndex].length < 22) {
-            matrix[rowIndex].push(0);
-        }
-    });
-
-    // Debug output
-    console.log('Matrix Preview:');
-    matrix.forEach((row, i) => {
-        const preview = row.map(code => 
-            Object.entries(VESTA_CHARS).find(([_, val]) => val === code)?.[0] || ' '
-        ).join('');
-        console.log(`Row ${i}: "${preview}"`);
+        matrix[rowIndex] = row;
     });
 
     return matrix;

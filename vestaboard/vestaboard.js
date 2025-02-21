@@ -2,27 +2,20 @@ import 'dotenv/config';
 
 export async function updateVestaboard(matrix) {
     const apiKey = process.env.VESTA_API_KEY;
-    
-    if (!apiKey) {
-        throw new Error('VESTA_API_KEY not configured');
-    }
+    if (!apiKey) throw new Error('Missing API key');
 
     try {
-        // Send the raw matrix directly
         const response = await fetch('https://rw.vestaboard.com/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Vestaboard-Read-Write-Key': apiKey
             },
-            body: JSON.stringify(matrix)  // Send matrix directly without wrapping
+            body: JSON.stringify(matrix)
         });
 
-        const data = await response.json();
-        console.log('Vestaboard response:', data);
-        return data;
+        return await response.json();
     } catch (error) {
-        console.error('Vestaboard error:', error);
         throw error;
     }
 }
