@@ -65,8 +65,9 @@ export default async function handler(req, res) {
             const newFlight = req.body;
             flights.push(newFlight);
 
-            // update board
-            const matrix = createVestaMatrix(flights);
+            // Capture a snapshot of the flights array at this moment
+            const flightsSnapshot = JSON.parse(JSON.stringify(flights));
+            const matrix = createVestaMatrix(flightsSnapshot);
             queueUpdate(matrix);
 
             return res.status(200).json({
