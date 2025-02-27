@@ -11,6 +11,9 @@ async function processQueue() {
     isUpdating = true;
     const matrix = updateQueue.shift();
 
+    console.log('Processing matrix:', matrix);
+    console.log('Remaining queue:', updateQueue);
+
     try {
         await updateVestaboard(matrix);
     } catch (error) {
@@ -23,6 +26,9 @@ async function processQueue() {
 
 function queueUpdate(matrix) {
     updateQueue.push(matrix);
+    console.log('Queued matrix:', matrix);
+    console.log('Current queue:', updateQueue);
+
     if (!isUpdating) {
         processQueue();
     }
@@ -88,7 +94,7 @@ export default async function handler(req, res) {
                 flights: flights
             });
         } catch (error) {
-            return res.status (500).json({ message: 'Failed to delete flight' });
+            return res.status(500).json({ message: 'Failed to delete flight' });
         }
     }
 
