@@ -2,6 +2,31 @@ import { createVestaMatrix } from '../../vestaboard/vestaConversion';
 import { updateVestaboard } from '../../vestaboard/vestaboard';
 
 let flights = [];
+let updateQueue = [];
+let isUpdating = false;
+
+async function processQueue() {
+    if (isUpdating || updateQueue.length === 0) return;
+
+    isUpdating = true;
+    const matrix = updateQueue.shift();
+
+    try {
+        await updateVestaboard(matrix);
+    } catch (error) {
+        console.error('Failed to update Vestaboard:', error);
+    } finally {
+        isUpdating = false;
+        setTimeout(processQueue, 10000); // 10 seconds delay
+    }
+}
+
+function queueUpdate(matrix) {
+    updateQueue.push(matrix);
+    if (!isUpdating) {
+        processQueue();
+    }
+}
 
 export default async function handler(req, res) {
     // basic CORS setup
@@ -28,12 +53,8 @@ export default async function handler(req, res) {
             flights.push(newFlight);
 
             // update board
-            try {
-                const matrix = createVestaMatrix(flights);
-                await updateVestaboard(matrix);
-            } catch (error) {
-                // keep going even if board update fails
-            }
+            const matrix = createVestaMatrix(flights);
+            queueUpdate(matrix);
 
             return res.status(200).json({
                 success: true,
@@ -59,19 +80,15 @@ export default async function handler(req, res) {
             flights.splice(index, 1);
 
             // update board
-            try {
-                const matrix = createVestaMatrix(flights);
-                await updateVestaboard(matrix);
-            } catch (error) {
-                // keep going even if board update fails
-            }
+            const matrix = createVestaMatrix(flights);
+            queueUpdate(matrix);
 
             return res.status(200).json({
                 success: true,
                 flights: flights
             });
         } catch (error) {
-            return res.status(500).json({ message: 'Failed to delete flight' });
+            return res.status 500).json({ message: 'Failed to delete flight' });
         }
     }
 
