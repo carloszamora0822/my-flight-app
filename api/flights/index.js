@@ -16,11 +16,15 @@ async function processQueue() {
 
     try {
         await updateVestaboard(matrix);
+        console.log('Vestaboard updated successfully');
     } catch (error) {
         console.error('Failed to update Vestaboard:', error);
     } finally {
         isUpdating = false;
-        setTimeout(processQueue, 10000); // 10 seconds delay
+        setTimeout(() => {
+            console.log('Waiting 10 seconds before processing next update');
+            processQueue();
+        }, 10000); // 10 seconds delay
     }
 }
 
