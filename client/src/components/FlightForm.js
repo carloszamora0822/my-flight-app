@@ -87,7 +87,7 @@ function FlightForm({ addFlight }) {
           maxLength="6"
         />
       </div>
-      <button type="submit">Add to Queue</button>
+      <button type="submit">Submit</button>
     </form>
   );
 }
