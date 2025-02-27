@@ -5,54 +5,94 @@ import { updateVestaboard } from '../../vestaboard/vestaboard';
 let flights = [];
 let updateQueue = [];
 let isUpdating = false;
+let queueTimer = null;
 
 // Debug function to log the current state
 function logState() {
     console.log('Current state:');
-    console.log('- Flights:', flights);
+    console.log('- Flights:', JSON.stringify(flights));
     console.log('- Queue length:', updateQueue.length);
     console.log('- Is updating:', isUpdating);
 }
 
+/**
+ * Process the next item in the queue after waiting for the specified delay
+ */
+function scheduleNextUpdate() {
+    if (queueTimer) {
+        clearTimeout(queueTimer);
+    }
+    
+    queueTimer = setTimeout(() => {
+        processQueue();
+    }, 10000); // 10 second delay
+    
+    console.log('Scheduled next update in 10 seconds');
+}
+
+/**
+ * Process the next item in the queue if available
+ */
 async function processQueue() {
-    if (isUpdating || updateQueue.length === 0) {
-        console.log('Queue is empty or already updating');
+    // Clear any existing timer
+    if (queueTimer) {
+        clearTimeout(queueTimer);
+        queueTimer = null;
+    }
+    
+    // If already updating or queue is empty, do nothing
+    if (isUpdating) {
+        console.log('Already processing an update, will not start another');
         return;
     }
-
+    
+    if (updateQueue.length === 0) {
+        console.log('Queue is empty, nothing to process');
+        return;
+    }
+    
+    // Set flag to indicate we're updating
     isUpdating = true;
+    
+    // Get the next matrix from the queue
     const matrix = updateQueue.shift();
-
-    console.log('Processing matrix:', matrix);
-    console.log('Remaining queue:', updateQueue);
-
+    console.log('Processing update, remaining items in queue:', updateQueue.length);
+    
     try {
+        // Send the update to Vestaboard
+        console.log('Sending update to Vestaboard');
         await updateVestaboard(matrix);
         console.log('Vestaboard updated successfully');
     } catch (error) {
         console.error('Failed to update Vestaboard:', error);
     } finally {
+        // Reset updating flag
         isUpdating = false;
-        // Process the next item in the queue immediately if there are more items
+        
+        // If there are more items in the queue, schedule the next update
         if (updateQueue.length > 0) {
-            console.log('Processing next item in queue');
-            setTimeout(() => processQueue(), 10000); // 10 seconds delay between updates
+            console.log('More updates in queue, scheduling next update');
+            scheduleNextUpdate();
         } else {
             console.log('Queue is now empty');
         }
     }
 }
 
+/**
+ * Add a matrix to the update queue and start processing if not already
+ */
 function queueUpdate(matrix) {
+    // Add the matrix to the queue
     updateQueue.push(matrix);
-    console.log('Queued matrix for Vestaboard update');
-    logState();
-
+    console.log(`Added update to queue. Queue now has ${updateQueue.length} items`);
+    
+    // If we're not currently updating, start processing the queue
     if (!isUpdating) {
-        console.log('Starting queue processing');
+        console.log('Starting queue processing immediately');
         processQueue();
     } else {
-        console.log('Queue processing already in progress, update added to queue');
+        console.log('Update added to queue, will be processed after current update');
     }
 }
 
@@ -68,8 +108,10 @@ export default async function handler(req, res) {
     // get all flights
     if (req.method === 'GET') {
         try {
+            console.log('GET request received, returning flights:', flights.length);
             return res.status(200).json(flights || []);
         } catch (error) {
+            console.error('Error in GET:', error);
             return res.status(500).json({ message: 'Failed to fetch flights' });
         }
     }
@@ -81,10 +123,11 @@ export default async function handler(req, res) {
             flights.push(newFlight);
             console.log('Added new flight:', newFlight);
 
-            // Capture a snapshot of the flights array at this moment
-            const flightsSnapshot = JSON.parse(JSON.stringify(flights));
-            console.log('Creating Vesta matrix with flights:', flightsSnapshot);
-            const matrix = createVestaMatrix(flightsSnapshot);
+            // Create a matrix with the current flights
+            console.log('Creating Vesta matrix with flights:', flights.length);
+            const matrix = createVestaMatrix([...flights]); // Create a copy to avoid reference issues
+            
+            // Queue the update
             queueUpdate(matrix);
 
             return res.status(200).json({
@@ -113,9 +156,11 @@ export default async function handler(req, res) {
             flights.splice(index, 1);
             console.log('Deleted flight at index', index, ':', deletedFlight);
 
-            // update board
-            console.log('Creating Vesta matrix after deletion with flights:', flights);
-            const matrix = createVestaMatrix(flights);
+            // Create a matrix with the updated flights
+            console.log('Creating Vesta matrix after deletion with flights:', flights.length);
+            const matrix = createVestaMatrix([...flights]); // Create a copy to avoid reference issues
+            
+            // Queue the update
             queueUpdate(matrix);
 
             return res.status(200).json({
