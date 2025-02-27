@@ -82,8 +82,9 @@ function App() {
       const data = await response.json();
       
       if (data.success) {
+        setFlights(data.flights || []);
         setLastUpdateTime(new Date());
-        alert('Vestaboard refresh requested successfully');
+        alert('Vestaboard refreshed successfully');
       } else {
         alert('Failed to refresh Vestaboard: ' + (data.message || 'Unknown error'));
       }
@@ -117,8 +118,8 @@ function App() {
         >
           {isRefreshing ? 'Refreshing...' : 'Refresh Vestaboard'}
         </button>
-        <p className="auto-refresh-note">
-          (Auto-refreshes 3 minutes after last update)
+        <p className="note">
+          (Limited to 5 flights. Newest entries will replace oldest ones.)
         </p>
       </div>
       <FlightForm addFlight={addFlight} />
