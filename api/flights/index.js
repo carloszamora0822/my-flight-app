@@ -7,6 +7,24 @@ let flights = [];
 let isUpdatingVestaboard = false;
 // Timestamp of the last update
 let lastUpdateTime = 0;
+// Timer for auto-refresh
+let autoRefreshTimer = null;
+
+// Schedule an auto-refresh of the Vestaboard after 3 minutes
+function scheduleAutoRefresh() {
+    // Clear any existing timer
+    if (autoRefreshTimer) {
+        clearTimeout(autoRefreshTimer);
+    }
+    
+    // Set a new timer for 3 minutes (180000 ms)
+    autoRefreshTimer = setTimeout(() => {
+        console.log('Auto-refresh: Updating Vestaboard after 3 minutes of inactivity');
+        updateVestaboardWithCurrentFlights();
+    }, 180000);
+    
+    console.log('Scheduled auto-refresh for 3 minutes from now');
+}
 
 // Simple function to update the Vestaboard with the current flights
 async function updateVestaboardWithCurrentFlights() {
@@ -41,6 +59,9 @@ async function updateVestaboardWithCurrentFlights() {
         // Update last update time
         lastUpdateTime = Date.now();
         console.log('Vestaboard updated successfully at', new Date(lastUpdateTime).toISOString());
+        
+        // Schedule auto-refresh after successful update
+        scheduleAutoRefresh();
     } catch (error) {
         console.error('Error updating Vestaboard:', error);
     } finally {
@@ -48,6 +69,9 @@ async function updateVestaboardWithCurrentFlights() {
         isUpdatingVestaboard = false;
     }
 }
+
+// Initialize auto-refresh when the server starts
+scheduleAutoRefresh();
 
 export default async function handler(req, res) {
     // Basic CORS setup
@@ -57,6 +81,27 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Accept');
 
     if (req.method === 'OPTIONS') return res.status(200).end();
+
+    // Manual refresh endpoint
+    if (req.method === 'POST' && req.url.endsWith('/refresh')) {
+        try {
+            console.log('Manual refresh requested');
+            
+            // Force an immediate update of the Vestaboard
+            await updateVestaboardWithCurrentFlights();
+            
+            return res.status(200).json({
+                success: true,
+                message: 'Vestaboard refresh initiated'
+            });
+        } catch (error) {
+            console.error('Error during manual refresh:', error);
+            return res.status(500).json({ 
+                success: false,
+                message: 'Failed to refresh Vestaboard' 
+            });
+        }
+    }
 
     // Get all flights
     if (req.method === 'GET') {
