@@ -6,7 +6,10 @@ let updateQueue = [];
 let isUpdating = false;
 
 async function processQueue() {
-    if (isUpdating || updateQueue.length === 0) return;
+    if (isUpdating || updateQueue.length === 0) {
+        console.log('Queue is empty or already updating');
+        return;
+    }
 
     isUpdating = true;
     const matrix = updateQueue.shift();
