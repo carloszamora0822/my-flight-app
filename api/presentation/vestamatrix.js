@@ -5,13 +5,14 @@ import { createEventMatrix } from '../../vestaboard/eventConversion';
 /**
  * API endpoint to fetch flight or event data in Vestaboard matrix format
  * This makes it easier to integrate with Power Automate
+ * Now supports API key authentication for external access
  */
 export default async function handler(req, res) {
     // CORS headers
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Accept');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Accept,Authorization,x-api-key');
 
     if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -24,6 +25,18 @@ export default async function handler(req, res) {
     }
 
     try {
+        // Simple API key validation - check the query parameter or header
+        const apiKey = req.query.apiKey || req.headers['x-api-key'];
+        const validApiKey = process.env.EXTERNAL_API_KEY || 'flight-app-default-key';
+        
+        // If apiKey is not provided or doesn't match, return 401
+        if (!apiKey || apiKey !== validApiKey) {
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized - Invalid or missing API key'
+            });
+        }
+        
         // Get type from query parameter - 'flights' or 'events'
         const type = req.query.type || '';
         
