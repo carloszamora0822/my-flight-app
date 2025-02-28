@@ -72,9 +72,16 @@ export function createEventMatrix(events) {
     
     if (rowIndex >= 6) break; // Don't exceed the matrix bounds
     
+    // Ensure date is max 5 characters
+    const dateStr = (event.date || '').substring(0, 5).padEnd(5, ' ');
+    // Ensure time is properly formatted
+    const timeStr = (event.time || '').substring(0, 5).padEnd(5, ' ');
+    // Limit description to 10 characters
+    const descStr = (event.description || '').substring(0, 10).padEnd(10, ' ');
+    
     // Format event line: "MM/DD HH:MM Description"
-    let eventLine = `${event.date} ${event.time} ${event.description}`;
-    eventLine = eventLine.padEnd(22, ' ').substring(0, 22); // Ensure it fits
+    let eventLine = `${dateStr} ${timeStr} ${descStr}`;
+    eventLine = eventLine.substring(0, 22); // Ensure it fits
     
     console.log(`Formatting event line: "${eventLine}"`);
     

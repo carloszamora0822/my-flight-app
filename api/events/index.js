@@ -3,8 +3,39 @@ import { updateVestaboard } from '../../vestaboard/vestaboard';
 import fs from 'fs';
 import path from 'path';
 
+// Helper to get proper root path that works in all environments
+function getRootPath() {
+    // Check if the data directory exists at different potential root paths
+    const potentialPaths = [
+        // Current working directory
+        process.cwd(),
+        // Up one level from current directory
+        path.join(process.cwd(), '..'),
+        // Absolute path to project root
+        '/Users/carloszamorawork/my-flight-app',
+        // Relative path from this file (up 2 levels)
+        path.join(__dirname, '..', '..')
+    ];
+    
+    for (const potentialPath of potentialPaths) {
+        const dataPath = path.join(potentialPath, 'data');
+        if (fs.existsSync(dataPath)) {
+            console.log('Found data directory at:', dataPath);
+            return potentialPath;
+        }
+    }
+    
+    // If no existing data directory found, create one at process.cwd()
+    const dataPath = path.join(process.cwd(), 'data');
+    console.log('Creating data directory at:', dataPath);
+    fs.mkdirSync(dataPath, { recursive: true });
+    return process.cwd();
+}
+
 // Path to events data file
-const eventsFilePath = path.join(process.cwd(), 'data', 'events.json');
+const rootPath = getRootPath();
+const eventsFilePath = path.join(rootPath, 'data', 'events.json');
+console.log('Using events data file at:', eventsFilePath);
 
 // In-memory cache of events (will be loaded from file)
 let eventsCache = [];
@@ -21,7 +52,7 @@ let lastUpdateTime = 0;
 function loadEvents() {
     try {
         // Create data directory if it doesn't exist
-        const dataDir = path.join(process.cwd(), 'data');
+        const dataDir = path.join(rootPath, 'data');
         if (!fs.existsSync(dataDir)) {
             console.log('Creating data directory:', dataDir);
             fs.mkdirSync(dataDir, { recursive: true });
@@ -36,11 +67,26 @@ function loadEvents() {
 
         // Read and parse file
         const fileData = fs.readFileSync(eventsFilePath, 'utf8');
+        console.log('Raw events data from file:', fileData);
+        
+        // Handle empty file case
+        if (!fileData || fileData.trim() === '') {
+            console.log('Events file is empty, initializing with empty array');
+            fs.writeFileSync(eventsFilePath, JSON.stringify([]));
+            return [];
+        }
+        
         const events = JSON.parse(fileData);
         console.log(`Loaded ${events.length} events from file`);
         return Array.isArray(events) ? events : [];
     } catch (error) {
         console.error('Error loading events from file:', error);
+        // If we hit an error reading the file, try to reset it
+        try {
+            fs.writeFileSync(eventsFilePath, JSON.stringify([]));
+        } catch (writeError) {
+            console.error('Error resetting events file:', writeError);
+        }
         return []; // Return empty array on error
     }
 }
@@ -52,12 +98,14 @@ function loadEvents() {
 function saveEvents(events) {
     try {
         // Create data directory if it doesn't exist
-        const dataDir = path.join(process.cwd(), 'data');
+        const dataDir = path.join(rootPath, 'data');
         if (!fs.existsSync(dataDir)) {
             console.log('Creating data directory:', dataDir);
             fs.mkdirSync(dataDir, { recursive: true });
         }
 
+        console.log(`Saving ${events.length} events to file:`, eventsFilePath);
+        
         // Write events to file
         fs.writeFileSync(eventsFilePath, JSON.stringify(events, null, 2));
         console.log(`Saved ${events.length} events to file`);

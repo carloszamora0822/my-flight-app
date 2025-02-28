@@ -43,7 +43,7 @@ function EventForm({ addEvent }) {
           value={date}
           onChange={(e) => setDate(e.target.value)}
           required
-          placeholder="(Ex. 03/15)"
+          placeholder="(MM/DD)"
           maxLength="5"
         />
       </div>

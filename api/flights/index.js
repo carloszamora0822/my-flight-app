@@ -3,8 +3,39 @@ import { updateVestaboard } from '../../vestaboard/vestaboard';
 import fs from 'fs';
 import path from 'path';
 
+// Helper to get proper root path that works in all environments
+function getRootPath() {
+    // Check if the data directory exists at different potential root paths
+    const potentialPaths = [
+        // Current working directory
+        process.cwd(),
+        // Up one level from current directory
+        path.join(process.cwd(), '..'),
+        // Absolute path to project root
+        '/Users/carloszamorawork/my-flight-app',
+        // Relative path from this file (up 2 levels)
+        path.join(__dirname, '..', '..')
+    ];
+    
+    for (const potentialPath of potentialPaths) {
+        const dataPath = path.join(potentialPath, 'data');
+        if (fs.existsSync(dataPath)) {
+            console.log('Found data directory at:', dataPath);
+            return potentialPath;
+        }
+    }
+    
+    // If no existing data directory found, create one at process.cwd()
+    const dataPath = path.join(process.cwd(), 'data');
+    console.log('Creating data directory at:', dataPath);
+    fs.mkdirSync(dataPath, { recursive: true });
+    return process.cwd();
+}
+
 // Path to flight data file
-const flightsFilePath = path.join(process.cwd(), 'data', 'flights.json');
+const rootPath = getRootPath();
+const flightsFilePath = path.join(rootPath, 'data', 'flights.json');
+console.log('Using flights data file at:', flightsFilePath);
 
 // In-memory cache of flights (will be loaded from file)
 let flightsCache = [];
@@ -21,7 +52,7 @@ let lastUpdateTime = 0;
 function loadFlights() {
     try {
         // Create data directory if it doesn't exist
-        const dataDir = path.join(process.cwd(), 'data');
+        const dataDir = path.join(rootPath, 'data');
         if (!fs.existsSync(dataDir)) {
             console.log('Creating data directory:', dataDir);
             fs.mkdirSync(dataDir, { recursive: true });
@@ -36,11 +67,26 @@ function loadFlights() {
 
         // Read and parse file
         const fileData = fs.readFileSync(flightsFilePath, 'utf8');
+        console.log('Raw flights data from file:', fileData);
+        
+        // Handle empty file case
+        if (!fileData || fileData.trim() === '') {
+            console.log('Flights file is empty, initializing with empty array');
+            fs.writeFileSync(flightsFilePath, JSON.stringify([]));
+            return [];
+        }
+        
         const flights = JSON.parse(fileData);
         console.log(`Loaded ${flights.length} flights from file`);
         return Array.isArray(flights) ? flights : [];
     } catch (error) {
         console.error('Error loading flights from file:', error);
+        // If we hit an error reading the file, try to reset it
+        try {
+            fs.writeFileSync(flightsFilePath, JSON.stringify([]));
+        } catch (writeError) {
+            console.error('Error resetting flights file:', writeError);
+        }
         return []; // Return empty array on error
     }
 }
@@ -52,12 +98,14 @@ function loadFlights() {
 function saveFlights(flights) {
     try {
         // Create data directory if it doesn't exist
-        const dataDir = path.join(process.cwd(), 'data');
+        const dataDir = path.join(rootPath, 'data');
         if (!fs.existsSync(dataDir)) {
             console.log('Creating data directory:', dataDir);
             fs.mkdirSync(dataDir, { recursive: true });
         }
 
+        console.log(`Saving ${flights.length} flights to file:`, flightsFilePath);
+        
         // Write flights to file
         fs.writeFileSync(flightsFilePath, JSON.stringify(flights, null, 2));
         console.log(`Saved ${flights.length} flights to file`);

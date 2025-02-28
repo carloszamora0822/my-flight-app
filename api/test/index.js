@@ -23,9 +23,9 @@ export default async function handler(req, res) {
             if (type === 'event') {
                 // Test event display
                 const event = {
-                    date: data.date || '03/15',
-                    time: data.time || '13:30',
-                    description: data.description || 'TEST EVENT'
+                    date: (data.date || '03/01').substring(0, 5), // Limit to 5 chars
+                    time: (data.time || '14:00').substring(0, 5), // Limit to 5 chars
+                    description: (data.description || 'TEST EVENT').substring(0, 10) // Limit to 10 chars
                 };
                 
                 console.log('Creating event matrix for:', event);
