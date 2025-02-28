@@ -4,6 +4,7 @@ function EventForm({ addEvent }) {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [description, setDescription] = useState('');
+  const [sendToVesta, setSendToVesta] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -15,8 +16,8 @@ function EventForm({ addEvent }) {
 
     // Show loading indicator or disable submit button here if needed
     try {
-      console.log('Submitting event:', { date, time, description });
-      const response = await addEvent({ date, time, description });
+      console.log('Submitting event:', { date, time, description, sendToVesta });
+      const response = await addEvent({ date, time, description, sendToVesta });
       console.log('Event submission result:', response);
       
       // Clear form only if addition was successful
@@ -24,6 +25,7 @@ function EventForm({ addEvent }) {
         setDate('');
         setTime('');
         setDescription('');
+        setSendToVesta(false);
       } else {
         // Show specific error message from server if available
         const errorMessage = response && response.message 
@@ -76,6 +78,17 @@ function EventForm({ addEvent }) {
           placeholder="(Max 10 chars)"
           maxLength="10"
         />
+      </div>
+      <div className="form-group checkbox-group">
+        <label htmlFor="send-to-vesta">
+          <input
+            type="checkbox"
+            id="send-to-vesta"
+            checked={sendToVesta}
+            onChange={(e) => setSendToVesta(e.target.checked)}
+          />
+          Send to Vestaboard
+        </label>
       </div>
       <button type="submit" className="event-submit-btn">Add to Events</button>
     </form>

@@ -93,7 +93,7 @@ async function updateVestaboardWithEvents(events) {
     try {
         // Set flag to prevent concurrent updates
         isUpdatingVestaboard = true;
-        console.log('Starting Vestaboard update with events:', events.length);
+        console.log('Starting Vestaboard update with events:', JSON.stringify(events));
 
         // Create matrix with events
         const matrix = createEventMatrix([...events]);
@@ -109,14 +109,22 @@ async function updateVestaboardWithEvents(events) {
             await new Promise(resolve => setTimeout(resolve, waitTime));
         }
         
-        // Update the Vestaboard
-        await updateVestaboard(matrix);
-        
-        // Update last update time
-        lastUpdateTime = Date.now();
-        console.log('Vestaboard updated successfully at', new Date(lastUpdateTime).toISOString());
+        try {
+            // Update the Vestaboard
+            const result = await updateVestaboard(matrix);
+            console.log('Vestaboard update result:', JSON.stringify(result));
+            
+            // Update last update time
+            lastUpdateTime = Date.now();
+            console.log('Vestaboard updated successfully at', new Date(lastUpdateTime).toISOString());
+            return true;
+        } catch (vestaError) {
+            console.error('Error updating Vestaboard:', vestaError);
+            return false;
+        }
     } catch (error) {
-        console.error('Error updating Vestaboard:', error);
+        console.error('Error preparing Vestaboard update:', error);
+        return false;
     } finally {
         // Reset flag regardless of success or failure
         isUpdatingVestaboard = false;
