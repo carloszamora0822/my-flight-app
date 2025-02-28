@@ -3,56 +3,76 @@ import { updateVestaboard } from '../../vestaboard/vestaboard';
 import fs from 'fs';
 import path from 'path';
 
-// Path to the data file
-const dataFilePath = path.join(process.cwd(), 'data', 'flights.json');
+// Path to the data file - using an absolute path to ensure it works in all environments
+const DATA_DIR = path.join(process.cwd(), 'data');
+const DATA_FILE = path.join(DATA_DIR, 'flights.json');
 
 // Ensure the data directory exists
-try {
-    if (!fs.existsSync(path.join(process.cwd(), 'data'))) {
-        fs.mkdirSync(path.join(process.cwd(), 'data'), { recursive: true });
+if (!fs.existsSync(DATA_DIR)) {
+    try {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+        console.log('Created data directory:', DATA_DIR);
+    } catch (error) {
+        console.error('Failed to create data directory:', error);
     }
-} catch (error) {
-    console.error('Error creating data directory:', error);
 }
 
-// Load flights from persistent storage, default to empty array if file doesn't exist
-let flights = [];
-try {
-    if (fs.existsSync(dataFilePath)) {
-        const fileData = fs.readFileSync(dataFilePath, 'utf8');
-        flights = JSON.parse(fileData);
-        console.log('Loaded flights from file:', flights.length);
-    } else {
-        // Create the file with an empty array if it doesn't exist
-        fs.writeFileSync(dataFilePath, JSON.stringify(flights), 'utf8');
-        console.log('Created new flights data file');
+/**
+ * Load flights from the JSON file
+ * @returns {Array} Array of flight objects
+ */
+function loadFlights() {
+    try {
+        if (fs.existsSync(DATA_FILE)) {
+            const data = fs.readFileSync(DATA_FILE, 'utf8');
+            const flights = JSON.parse(data);
+            console.log(`Loaded ${flights.length} flights from storage`);
+            return Array.isArray(flights) ? flights : [];
+        } else {
+            console.log('No flight data file found, starting with empty array');
+            saveFlights([]);
+            return [];
+        }
+    } catch (error) {
+        console.error('Error loading flights from file:', error);
+        return [];
     }
-} catch (error) {
-    console.error('Error loading flights from file:', error);
-    // Continue with an empty array
 }
+
+/**
+ * Save flights to the JSON file
+ * @param {Array} flights Array of flight objects to save
+ */
+function saveFlights(flights) {
+    try {
+        // Ensure directory exists before writing
+        if (!fs.existsSync(DATA_DIR)) {
+            fs.mkdirSync(DATA_DIR, { recursive: true });
+        }
+        
+        fs.writeFileSync(DATA_FILE, JSON.stringify(flights, null, 2), 'utf8');
+        console.log(`Saved ${flights.length} flights to storage`);
+        return true;
+    } catch (error) {
+        console.error('Error saving flights to file:', error);
+        return false;
+    }
+}
+
+// Load flights on module initialization
+let flights = loadFlights();
 
 // Flag to track if we're currently updating the Vestaboard
 let isUpdatingVestaboard = false;
 // Timestamp of the last update
 let lastUpdateTime = 0;
 
-// Function to save flights to persistent storage
-function saveFlights() {
-    try {
-        fs.writeFileSync(dataFilePath, JSON.stringify(flights), 'utf8');
-        console.log('Saved flights to file:', flights.length);
-    } catch (error) {
-        console.error('Error saving flights to file:', error);
-    }
-}
-
 // Function to ensure we don't exceed 5 flights
 function capFlightsArray() {
     if (flights.length > 5) {
         console.log(`Capping flights array from ${flights.length} to 5 items`);
         flights = flights.slice(0, 5);
-        saveFlights(); // Save after capping
+        saveFlights(flights);
     }
 }
 
@@ -111,6 +131,9 @@ export default async function handler(req, res) {
         try {
             console.log('Manual refresh requested');
             
+            // Reload flights from storage to ensure we have the latest data
+            flights = loadFlights();
+            
             // Force an immediate update of the Vestaboard
             await updateVestaboardWithCurrentFlights();
             
@@ -131,6 +154,9 @@ export default async function handler(req, res) {
     // Get all flights
     if (req.method === 'GET') {
         try {
+            // Reload flights from storage to ensure we have the latest data
+            flights = loadFlights();
+            
             console.log('GET request received, returning flights:', flights.length);
             return res.status(200).json(flights || []);
         } catch (error) {
@@ -144,12 +170,14 @@ export default async function handler(req, res) {
         try {
             const newFlight = req.body;
             
-            // Add to flights array and cap it at 5
-            flights.push(newFlight);
-            capFlightsArray();
+            // Reload flights to ensure we have the latest data
+            flights = loadFlights();
             
-            // Save to persistent storage
-            saveFlights();
+            // Add to flights array
+            flights.push(newFlight);
+            
+            // Cap and save
+            capFlightsArray();
             
             console.log('Added new flight:', newFlight);
 
@@ -172,6 +200,9 @@ export default async function handler(req, res) {
         try {
             const index = parseInt(req.url.split('/').pop());
             
+            // Reload flights to ensure we have the latest data
+            flights = loadFlights();
+            
             if (isNaN(index) || index < 0 || index >= flights.length) {
                 return res.status(400).json({ 
                     success: false,
@@ -183,8 +214,8 @@ export default async function handler(req, res) {
             flights.splice(index, 1);
             console.log('Deleted flight at index', index, ':', deletedFlight);
             
-            // Save to persistent storage
-            saveFlights();
+            // Save to storage
+            saveFlights(flights);
 
             // Update Vestaboard with the current flights
             // This will handle rate limiting internally
