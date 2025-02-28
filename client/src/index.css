@@ -72,8 +72,18 @@ code {
   color: #1d3557;
 }
 
+.form-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .form-group {
   margin-bottom: 15px;
+}
+
+.form-group.half-width {
+  width: 48%;
 }
 
 .form-group label {
@@ -89,6 +99,10 @@ code {
   border: 1px solid #ced4da;
   border-radius: 4px;
   font-size: 16px;
+}
+
+.form-group input.narrow-input {
+  max-width: 150px;
 }
 
 .submit-btn {
