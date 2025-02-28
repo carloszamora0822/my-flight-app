@@ -4,15 +4,16 @@
  */
 
 // Character map for Vestaboard
-// 0-26 for A-Z, 27-36 for 0-9, then special characters
+// 0 for blank, 1-26 for A-Z, 27-36 for 0-9, then special characters
 const CHAR_MAP = {
-  ' ': 0, 'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8, 'I': 9, 
+  ' ': 0,
+  'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8, 'I': 9, 
   'J': 10, 'K': 11, 'L': 12, 'M': 13, 'N': 14, 'O': 15, 'P': 16, 'Q': 17, 'R': 18, 
   'S': 19, 'T': 20, 'U': 21, 'V': 22, 'W': 23, 'X': 24, 'Y': 25, 'Z': 26, 
-  '0': 27, '1': 28, '2': 29, '3': 30, '4': 31, '5': 32, '6': 33, '7': 34, '8': 35, '9': 36,
-  '!': 37, '@': 38, '#': 39, '$': 40, '(': 41, ')': 42, '-': 44, '+': 43, '&': 45,
-  '=': 46, ';': 47, ':': 48, "'": 49, '"': 50, '%': 51, ',': 52, '.': 53, '/': 54,
-  '?': 55, '°': 56, '|': 94, '≠': 95, '~': 96 // Others exist but these are most useful
+  '0': 36, '1': 27, '2': 28, '3': 29, '4': 30, '5': 31, '6': 32, '7': 33, '8': 34, '9': 35,
+  '!': 37, '@': 38, '#': 39, '$': 40, '(': 41, ')': 42, '+': 43, '-': 44, 
+  '&': 45, '=': 46, ';': 47, ':': 48, "'": 49, '"': 50, '%': 51, ',': 52, 
+  '.': 53, '/': 59, '?': 60, '°': 62
 };
 
 // Create a 6x22 matrix filled with spaces (code 0)
@@ -26,7 +27,11 @@ function createEmptyMatrix() {
  * @returns {number} - The Vestaboard code
  */
 function charToVestaCode(char) {
+  // Convert to uppercase since Vestaboard only has uppercase letters
   const upperChar = char.toUpperCase();
+  
+  // Return the code if it exists, otherwise return 0 (blank)
+  console.log(`Converting '${char}' to code: ${CHAR_MAP[upperChar] !== undefined ? CHAR_MAP[upperChar] : 0}`);
   return CHAR_MAP[upperChar] !== undefined ? CHAR_MAP[upperChar] : 0;
 }
 
@@ -36,7 +41,10 @@ function charToVestaCode(char) {
  * @returns {number[]} - Array of Vestaboard character codes
  */
 function stringToVestaCodes(str) {
-  return str.split('').map(charToVestaCode);
+  console.log(`Converting string to Vesta codes: "${str}"`);
+  const result = str.split('').map(charToVestaCode);
+  console.log(`Result: [${result.join(', ')}]`);
+  return result;
 }
 
 /**
@@ -73,12 +81,14 @@ export function createEventMatrix(events) {
     let eventLine = `${event.date} ${event.time} ${event.description}`;
     eventLine = eventLine.padEnd(22, ' ').substring(0, 22); // Ensure it fits
     
+    console.log(`Formatting event line: "${eventLine}"`);
+    
     const eventCodes = stringToVestaCodes(eventLine);
     for (let j = 0; j < eventCodes.length; j++) {
       if (j < 22) matrix[rowIndex][j] = eventCodes[j];
     }
   }
   
-  console.log('Created event matrix:', matrix);
+  console.log('Created event matrix:', JSON.stringify(matrix));
   return matrix;
 }

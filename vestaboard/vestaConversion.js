@@ -3,8 +3,10 @@ const VESTA_CHARS = {
     'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8, 'I': 9,
     'J': 10, 'K': 11, 'L': 12, 'M': 13, 'N': 14, 'O': 15, 'P': 16, 'Q': 17,
     'R': 18, 'S': 19, 'T': 20, 'U': 21, 'V': 22, 'W': 23, 'X': 24, 'Y': 25,
-    'Z': 26, '1': 27, '2': 28, '3': 29, '4': 30, '5': 31, '6': 32, '7': 33,
-    '8': 34, '9': 35, '0': 36
+    'Z': 26, '0': 36, '1': 27, '2': 28, '3': 29, '4': 30, '5': 31, '6': 32, '7': 33,
+    '8': 34, '9': 35, '!': 37, '@': 38, '#': 39, '$': 40, '(': 41, ')': 42, 
+    '+': 43, '-': 44, '&': 45, '=': 46, ';': 47, ':': 48, "'": 49, '"': 50, 
+    '%': 51, ',': 52, '.': 53, '/': 59, '?': 60, '°': 62
 };
 
 function padString(str, length) {
@@ -12,7 +14,13 @@ function padString(str, length) {
 }
 
 function stringToVestaboard(str) {
-    return str.toUpperCase().split('').map(char => VESTA_CHARS[char] || VESTA_CHARS[' ']);
+    console.log(`Converting string to Vesta codes: "${str}"`);
+    const result = str.toUpperCase().split('').map(char => {
+        console.log(`Converting '${char}' to code: ${VESTA_CHARS[char] || 0}`);
+        return VESTA_CHARS[char] || VESTA_CHARS[' '];
+    });
+    console.log(`Result: [${result.join(', ')}]`);
+    return result;
 }
 
 function getFormattedDate() {
@@ -45,6 +53,8 @@ function createFlightRow(flight) {
 }
 
 export function createVestaMatrix(flights) {
+    console.log('Creating flight matrix with flights:', flights);
+    
     const matrix = [
         Array(22).fill(0),  // header
         Array(22).fill(0),  // flight 1
@@ -55,12 +65,18 @@ export function createVestaMatrix(flights) {
     ];
 
     // add header
-    const header = 'CHECKRIDE'.split('').map(char => VESTA_CHARS[char.toUpperCase()] || 0);
+    const header = 'FLIGHT SCHEDULE'.split('').map(char => VESTA_CHARS[char.toUpperCase()] || 0);
     matrix[0] = [...header, ...Array(22 - header.length).fill(0)];
+    
+    // Add divider line
+    for (let i = 0; i < 22; i++) {
+        matrix[1][i] = VESTA_CHARS['-'];
+    }
 
     // add flights
     flights.slice(0, 5).forEach((flight, index) => {
-        const rowIndex = index + 1;
+        const rowIndex = index + 2;  // Start from row 2 after header and divider
+        if (rowIndex >= 6) return;   // Don't exceed matrix bounds
         
         const timeStr = flight.time.padEnd(4);
         const callStr = flight.callsign.toUpperCase().padEnd(6);
@@ -81,5 +97,6 @@ export function createVestaMatrix(flights) {
         matrix[rowIndex] = row;
     });
 
+    console.log('Created flight matrix:', JSON.stringify(matrix));
     return matrix;
 }
