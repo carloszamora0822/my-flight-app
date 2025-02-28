@@ -132,8 +132,14 @@ export default async function handler(req, res) {
 
     if (req.method === 'OPTIONS') return res.status(200).end();
 
-    // Always load events from database to ensure we have the latest data
-    eventsCache = await loadEvents();
+    try {
+        // Always load events from database to ensure we have the latest data
+        eventsCache = await loadEvents();
+    } catch (error) {
+        console.error('Failed to load events:', error);
+        // Continue with empty cache if database access fails
+        eventsCache = [];
+    }
 
     // Get all events
     if (req.method === 'GET') {
@@ -142,7 +148,10 @@ export default async function handler(req, res) {
             return res.status(200).json(eventsCache);
         } catch (error) {
             console.error('Error in GET events:', error);
-            return res.status(500).json({ message: 'Failed to fetch events' });
+            return res.status(500).json({ 
+                message: 'Failed to fetch events',
+                success: false
+            });
         }
     }
 
@@ -173,7 +182,12 @@ export default async function handler(req, res) {
             const capped = capEventsArray(updatedEvents);
             
             // Save to database
-            await saveEvents(capped);
+            try {
+                await saveEvents(capped);
+            } catch (dbError) {
+                console.error('Database save error:', dbError);
+                // Continue with the local changes even if database save fails
+            }
             
             // Update Vestaboard with the events if sendToVesta is true
             if (req.body.sendToVesta) {
@@ -186,7 +200,11 @@ export default async function handler(req, res) {
             });
         } catch (error) {
             console.error('Failed to add event:', error);
-            return res.status(500).json({ message: 'Failed to add event' });
+            return res.status(500).json({ 
+                message: 'Failed to add event', 
+                success: false,
+                error: error.message
+            });
         }
     }
 
@@ -208,7 +226,12 @@ export default async function handler(req, res) {
             console.log('Deleted event at index', index, ':', deletedEvent);
             
             // Save updated events list to database
-            await saveEvents(updatedEvents);
+            try {
+                await saveEvents(updatedEvents);
+            } catch (dbError) {
+                console.error('Database save error on delete:', dbError);
+                // Continue with the local changes even if database save fails
+            }
             
             return res.status(200).json({
                 success: true,
@@ -216,7 +239,11 @@ export default async function handler(req, res) {
             });
         } catch (error) {
             console.error('Failed to delete event:', error);
-            return res.status(500).json({ message: 'Failed to delete event' });
+            return res.status(500).json({ 
+                message: 'Failed to delete event',
+                success: false,
+                error: error.message
+            });
         }
     }
 

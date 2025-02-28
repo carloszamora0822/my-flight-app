@@ -22,14 +22,25 @@ function App() {
     try {
       console.log('Fetching flights...');
       const response = await fetch('/api/flights');
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Error response from flights API: ${response.status} - ${errorText}`);
+        return; // Don't update state if we got an error response
+      }
+      
       const data = await response.json();
       console.log('Fetched flights:', data);
-      setFlights(Array.isArray(data) ? data : []);
-      if (data.length > 0) {
+      
+      if (Array.isArray(data)) {
+        setFlights(data);
         setLastFlightUpdate(new Date());
+      } else {
+        console.error('Unexpected data format from flights API:', data);
       }
     } catch (error) {
       console.error('Error fetching flights:', error);
+      // Continue with current state - don't clear existing flights on error
     }
   };
 
@@ -41,6 +52,13 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newFlight)
       });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Error response from flights API: ${response.status} - ${errorText}`);
+        return { success: false, message: `Server error: ${response.status}` };
+      }
+      
       const data = await response.json();
       console.log('Add flight response:', data);
       
@@ -52,7 +70,12 @@ function App() {
       return data;
     } catch (error) {
       console.error('Error adding flight:', error);
-      throw error;
+      // Return a standardized error response object
+      return { 
+        success: false, 
+        message: 'Failed to connect to server. Please try again later.',
+        error: error.message
+      };
     }
   };
 
@@ -65,6 +88,12 @@ function App() {
           'Content-Type': 'application/json'
         }
       });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Error response from flights API: ${response.status} - ${errorText}`);
+        return { success: false, message: `Server error: ${response.status}` };
+      }
       
       const data = await response.json();
       console.log('Delete flight response:', data);
@@ -92,6 +121,12 @@ function App() {
         body: JSON.stringify({ flights })
       });
       
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Error response from flights API: ${response.status} - ${errorText}`);
+        return { success: false, message: `Server error: ${response.status}` };
+      }
+      
       const data = await response.json();
       console.log('Update Vestaboard with flights response:', data);
       
@@ -114,14 +149,25 @@ function App() {
     try {
       console.log('Fetching events...');
       const response = await fetch('/api/events');
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Error response from events API: ${response.status} - ${errorText}`);
+        return; // Don't update state if we got an error response
+      }
+      
       const data = await response.json();
       console.log('Fetched events:', data);
-      setEvents(Array.isArray(data) ? data : []);
-      if (data.length > 0) {
+      
+      if (Array.isArray(data)) {
+        setEvents(data);
         setLastEventUpdate(new Date());
+      } else {
+        console.error('Unexpected data format from events API:', data);
       }
     } catch (error) {
       console.error('Error fetching events:', error);
+      // Continue with current state - don't clear existing events on error
     }
   };
 
@@ -133,6 +179,13 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newEvent)
       });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Error response from events API: ${response.status} - ${errorText}`);
+        return { success: false, message: `Server error: ${response.status}` };
+      }
+      
       const data = await response.json();
       console.log('Add event response:', data);
       
@@ -144,7 +197,12 @@ function App() {
       return data;
     } catch (error) {
       console.error('Error adding event:', error);
-      throw error;
+      // Return a standardized error response object
+      return { 
+        success: false, 
+        message: 'Failed to connect to server. Please try again later.',
+        error: error.message
+      };
     }
   };
 
@@ -157,6 +215,12 @@ function App() {
           'Content-Type': 'application/json'
         }
       });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Error response from events API: ${response.status} - ${errorText}`);
+        return { success: false, message: `Server error: ${response.status}` };
+      }
       
       const data = await response.json();
       console.log('Delete event response:', data);
@@ -183,6 +247,12 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ events, sendToVesta: true })
       });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Error response from events API: ${response.status} - ${errorText}`);
+        return { success: false, message: `Server error: ${response.status}` };
+      }
       
       const data = await response.json();
       console.log('Update Vestaboard with events response:', data);

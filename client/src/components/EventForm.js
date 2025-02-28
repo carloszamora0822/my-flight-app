@@ -13,22 +13,28 @@ function EventForm({ addEvent }) {
       return;
     }
 
+    // Show loading indicator or disable submit button here if needed
     try {
       console.log('Submitting event:', { date, time, description });
       const response = await addEvent({ date, time, description });
-      console.log('Event added successfully:', response);
+      console.log('Event submission result:', response);
       
       // Clear form only if addition was successful
-      if (response.success) {
+      if (response && response.success) {
         setDate('');
         setTime('');
         setDescription('');
       } else {
-        alert('Failed to add event. Please try again.');
+        // Show specific error message from server if available
+        const errorMessage = response && response.message 
+          ? response.message 
+          : 'Failed to add event. Please try again.';
+        alert(errorMessage);
       }
     } catch (error) {
-      console.error('Error adding event:', error);
-      alert('Error adding event. Please try again.');
+      // This should rarely happen now with the improved error handling in addEvent
+      console.error('Unexpected error adding event:', error);
+      alert('Connection error. Please check your internet connection and try again.');
     }
   };
 

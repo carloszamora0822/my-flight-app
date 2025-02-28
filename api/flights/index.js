@@ -134,8 +134,14 @@ export default async function handler(req, res) {
 
     if (req.method === 'OPTIONS') return res.status(200).end();
 
-    // Always load flights from database to ensure we have the latest data
-    flightsCache = await loadFlights();
+    try {
+        // Always load flights from database to ensure we have the latest data
+        flightsCache = await loadFlights();
+    } catch (error) {
+        console.error('Failed to load flights:', error);
+        // Continue with empty cache if database access fails
+        flightsCache = [];
+    }
 
     // Get all flights
     if (req.method === 'GET') {
@@ -144,7 +150,10 @@ export default async function handler(req, res) {
             return res.status(200).json(flightsCache);
         } catch (error) {
             console.error('Error in GET flights:', error);
-            return res.status(500).json({ message: 'Failed to fetch flights' });
+            return res.status(500).json({ 
+                message: 'Failed to fetch flights',
+                success: false 
+            });
         }
     }
 
@@ -182,7 +191,12 @@ export default async function handler(req, res) {
                 const capped = capFlightsArray(updatedFlights);
                 
                 // Save to database
-                await saveFlights(capped);
+                try {
+                    await saveFlights(capped);
+                } catch (dbError) {
+                    console.error('Database save error:', dbError);
+                    // Continue with the local changes even if database save fails
+                }
                 
                 // Update Vestaboard with the flights if sendToVesta is true
                 if (req.body.sendToVesta) {
@@ -202,7 +216,11 @@ export default async function handler(req, res) {
             }
         } catch (error) {
             console.error('Failed to add flight:', error);
-            return res.status(500).json({ message: 'Failed to add flight' });
+            return res.status(500).json({ 
+                message: 'Failed to add flight',
+                success: false,
+                error: error.message
+            });
         }
     }
 
@@ -224,7 +242,12 @@ export default async function handler(req, res) {
             console.log('Deleted flight at index', index, ':', deletedFlight);
             
             // Save updated flights list to database
-            await saveFlights(updatedFlights);
+            try {
+                await saveFlights(updatedFlights);
+            } catch (dbError) {
+                console.error('Database save error on delete:', dbError);
+                // Continue with the local changes even if database save fails
+            }
             
             return res.status(200).json({
                 success: true,
@@ -232,7 +255,11 @@ export default async function handler(req, res) {
             });
         } catch (error) {
             console.error('Failed to delete flight:', error);
-            return res.status(500).json({ message: 'Failed to delete flight' });
+            return res.status(500).json({ 
+                message: 'Failed to delete flight',
+                success: false,
+                error: error.message 
+            });
         }
     }
 

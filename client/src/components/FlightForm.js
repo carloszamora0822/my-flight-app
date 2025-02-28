@@ -9,6 +9,12 @@ function FlightForm({ addFlight }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Validation
+    if (!time || !callsign || !destination) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
     // Validate time format (military time)
     const timeNum = parseInt(time);
     if (time.length !== 4 || isNaN(timeNum) || timeNum < 0 || timeNum > 2359) {
@@ -21,22 +27,34 @@ function FlightForm({ addFlight }) {
       return;
     }
 
+    // Show loading indicator or disable submit button here if needed
     try {
-      const response = await addFlight({ time, callsign, type, destination });
-      console.log('Flight added successfully:', response);
+      console.log('Submitting flight:', { time, callsign, type, destination });
+      const response = await addFlight({ 
+        time, 
+        callsign, 
+        type, 
+        destination 
+      });
+      console.log('Flight submission result:', response);
       
       // Clear form only if addition was successful
-      if (response.success) {
+      if (response && response.success) {
         setTime('');
         setCallsign('');
         setType('PPL');
         setDestination('');
       } else {
-        alert('Failed to add flight. Please try again.');
+        // Show specific error message from server if available
+        const errorMessage = response && response.message 
+          ? response.message 
+          : 'Failed to add flight. Please try again.';
+        alert(errorMessage);
       }
     } catch (error) {
-      console.error('Error adding flight:', error);
-      alert('Error adding flight. Please try again.');
+      // This should rarely happen now with the improved error handling in addFlight
+      console.error('Unexpected error adding flight:', error);
+      alert('Connection error. Please check your internet connection and try again.');
     }
   };
 
