@@ -182,12 +182,12 @@ export default async function handler(req, res) {
                 });
             }
             // If it's a single new flight to add
-            else if (req.body.airline && req.body.flightNumber && req.body.status) {
+            else if (req.body.time && req.body.callsign && req.body.destination) {
                 const newFlight = {
                     time: req.body.time,
-                    callsign: `${req.body.airline}${req.body.flightNumber}`,
-                    type: req.body.status,
-                    destination: req.body.gate
+                    callsign: req.body.callsign,
+                    type: req.body.type || 'PPL',
+                    destination: req.body.destination
                 };
                 
                 console.log('Adding new flight:', newFlight);
