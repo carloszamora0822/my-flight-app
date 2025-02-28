@@ -149,6 +149,25 @@ export default async function handler(req, res) {
         eventsCache = [];
     }
 
+    // Check if this is a vestaboard matrix request
+    if (req.query.format === 'vestaboard') {
+        try {
+            // Load events from database
+            const events = await loadEvents();
+            
+            // Create Vestaboard matrix
+            const matrix = createEventMatrix(events);
+            
+            // Return the matrix
+            return res.status(200).json(matrix);
+        } catch (error) {
+            console.error('Error generating Vestaboard matrix:', error);
+            return res.status(500).json({ 
+                error: 'Failed to generate Vestaboard matrix'
+            });
+        }
+    }
+
     // Get all events
     if (req.method === 'GET') {
         try {

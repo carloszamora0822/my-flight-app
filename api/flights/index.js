@@ -133,14 +133,40 @@ async function updateVestaboardWithFlights(flights) {
     }
 }
 
+/**
+ * API handler for flights
+ * @param {Object} req The request object
+ * @param {Object} res The response object
+ */
 export default async function handler(req, res) {
-    // Basic CORS setup
+    // CORS Headers - allow any origin to access this API
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Accept');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
-    if (req.method === 'OPTIONS') return res.status(200).end();
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
+    // Check if this is a vestaboard matrix request
+    if (req.query.format === 'vestaboard') {
+        try {
+            // Load flights from database
+            const flights = await loadFlights();
+            
+            // Create Vestaboard matrix
+            const matrix = createVestaMatrix(flights);
+            
+            // Return the matrix
+            return res.status(200).json(matrix);
+        } catch (error) {
+            console.error('Error generating Vestaboard matrix:', error);
+            return res.status(500).json({ 
+                error: 'Failed to generate Vestaboard matrix'
+            });
+        }
+    }
 
     try {
         // Always load flights from database to ensure we have the latest data
