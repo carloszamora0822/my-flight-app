@@ -8,6 +8,19 @@ function EventForm({ addEvent }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Validation
+    if (!date || !time || !description) {
+      alert("Please fill in all required fields");
+      return;
+    }
+    
+    // Validate time format (military time)
+    const timeNum = parseInt(time);
+    if (time.length !== 4 || isNaN(timeNum) || timeNum < 0 || timeNum > 2359) {
+      alert("Invalid time format. Please use military time (0000-2359)");
+      return;
+    }
+    
     if (description.length > 10) {
       alert("Description must be 10 characters or less");
       return;
@@ -40,7 +53,7 @@ function EventForm({ addEvent }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="event-form">
+    <form onSubmit={handleSubmit} className="form">
       <h3>Add New Event</h3>
       <div className="form-group">
         <label htmlFor="date">Date:</label>
@@ -55,15 +68,16 @@ function EventForm({ addEvent }) {
         />
       </div>
       <div className="form-group">
-        <label htmlFor="event-time">Time:</label>
+        <label htmlFor="event-time">Time (Military):</label>
         <input
           type="text"
           id="event-time"
           value={time}
           onChange={(e) => setTime(e.target.value)}
           required
-          placeholder="(Ex. 13:30)"
-          maxLength="5"
+          pattern="[0-9]{4}"
+          maxLength="4"
+          placeholder="(Ex. 1230)"
         />
       </div>
       <div className="form-group">
@@ -78,7 +92,7 @@ function EventForm({ addEvent }) {
           maxLength="10"
         />
       </div>
-      <button type="submit" className="event-submit-btn">Add Event & Update Vestaboard</button>
+      <button type="submit" className="submit-btn">Submit Event</button>
     </form>
   );
 }

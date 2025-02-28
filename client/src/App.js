@@ -299,7 +299,7 @@ function App() {
             <button 
               onClick={updateVestaboardWithFlights} 
               disabled={isUpdatingFlights || flights.length === 0}
-              className="vesta-update-btn"
+              className="submit-btn"
             >
               {isUpdatingFlights ? 'Updating...' : 'Update Vestaboard with Flights'}
             </button>
@@ -322,7 +322,7 @@ function App() {
             <button 
               onClick={updateVestaboardWithEvents} 
               disabled={isUpdatingEvents || events.length === 0}
-              className="vesta-update-btn"
+              className="submit-btn"
             >
               {isUpdatingEvents ? 'Updating...' : 'Update Vestaboard with Events'}
             </button>

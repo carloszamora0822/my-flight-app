@@ -177,7 +177,7 @@ export default async function handler(req, res) {
             // Enforce character limits
             const newEvent = {
                 date: (req.body.date || '').substring(0, 5),         // Limit to 5 characters
-                time: (req.body.time || '').substring(0, 5),         // Limit to 5 characters
+                time: (req.body.time || '').substring(0, 4),         // Limit to 4 characters
                 description: (req.body.description || '').substring(0, 10)  // Limit to 10 characters
             };
             

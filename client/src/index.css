@@ -59,15 +59,15 @@ code {
   padding-bottom: 10px;
 }
 
-/* Flight Form Styles */
-.flight-form, .event-form {
+/* Form Styles */
+.form {
   background-color: #e8eff7;
   padding: 15px;
   border-radius: 5px;
   margin-bottom: 20px;
 }
 
-.flight-form h3, .event-form h3 {
+.form h3 {
   margin-top: 0;
   color: #1d3557;
 }
@@ -83,7 +83,7 @@ code {
   color: #415a77;
 }
 
-.form-group input {
+.form-group input, .form-group select {
   width: 100%;
   padding: 8px;
   border: 1px solid #ced4da;
@@ -91,7 +91,7 @@ code {
   font-size: 16px;
 }
 
-.submit-btn, .event-submit-btn, .vesta-update-btn {
+.submit-btn {
   background-color: #1d3557;
   color: white;
   border: none;
@@ -100,13 +100,15 @@ code {
   cursor: pointer;
   font-weight: bold;
   transition: background-color 0.3s;
+  width: 100%;
+  margin-top: 10px;
 }
 
-.submit-btn:hover, .event-submit-btn:hover, .vesta-update-btn:hover {
+.submit-btn:hover {
   background-color: #457b9d;
 }
 
-.submit-btn:disabled, .event-submit-btn:disabled, .vesta-update-btn:disabled {
+.submit-btn:disabled {
   background: #cccccc;
   cursor: not-allowed;
 }
@@ -156,18 +158,30 @@ code {
 }
 
 .status-section {
-  background: #415a77;
+  background-color: #f8f9fa;
   padding: 15px;
-  border-radius: 5px;
   margin-bottom: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: white;
+  border-radius: 5px;
+  border: 1px solid #dee2e6;
 }
 
 .status-section p {
   margin: 5px 0;
+}
+
+.status-section .note {
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.status-section .submit-btn {
+  margin-top: 10px;
+  background-color: #1e88e5;
+}
+
+.status-section .submit-btn:hover {
+  background-color: #1565c0;
 }
 
 .note {

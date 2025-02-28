@@ -60,7 +60,8 @@ function FlightForm({ addFlight }) {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="form">
+      <h3>Add New Flight</h3>
       <div className="form-group">
         <label htmlFor="time">Time (Military):</label>
         <input
@@ -109,7 +110,7 @@ function FlightForm({ addFlight }) {
           placeholder="(Ex. N32851)"
         />
       </div>
-      <button type="submit">Submit Flight & Update Vestaboard</button>
+      <button type="submit" className="submit-btn">Submit Flight</button>
     </form>
   );
 }
