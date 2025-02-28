@@ -58,22 +58,17 @@ export function createEventMatrix(events) {
   // Create empty matrix
   const matrix = createEmptyMatrix();
   
-  // Add title
-  const titleCodes = stringToVestaCodes('UPCOMING EVENTS');
+  // Add title with VBT name
+  const titleCodes = stringToVestaCodes('VBT EVENT BOARD');
   for (let i = 0; i < titleCodes.length; i++) {
     if (i < 22) matrix[0][i + 3] = titleCodes[i];
-  }
-  
-  // Add divider line
-  for (let i = 0; i < 22; i++) {
-    matrix[1][i] = CHAR_MAP['-'];
   }
   
   // Add events (up to 5)
   const eventsToShow = events.slice(0, 5);
   for (let i = 0; i < eventsToShow.length; i++) {
     const event = eventsToShow[i];
-    const rowIndex = i + 2; // Start at row 2 (0-indexed)
+    const rowIndex = i + 1; // Start at row 1 (0-indexed) right after header
     
     if (rowIndex >= 6) break; // Don't exceed the matrix bounds
     

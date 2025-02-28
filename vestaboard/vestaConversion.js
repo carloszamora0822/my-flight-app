@@ -64,18 +64,15 @@ export function createVestaMatrix(flights) {
         Array(22).fill(0)   // flight 5
     ];
 
-    // add header
-    const header = 'FLIGHT SCHEDULE'.split('').map(char => VESTA_CHARS[char.toUpperCase()] || 0);
+    // add header with VBT name
+    const header = 'VBT FLIGHT BOARD'.split('').map(char => VESTA_CHARS[char.toUpperCase()] || 0);
     matrix[0] = [...header, ...Array(22 - header.length).fill(0)];
     
-    // Add divider line
-    for (let i = 0; i < 22; i++) {
-        matrix[1][i] = VESTA_CHARS['-'];
-    }
+    // No divider line - removed to allow for 5 items
 
-    // add flights
+    // add flights - now starting at row 1 instead of row 2
     flights.slice(0, 5).forEach((flight, index) => {
-        const rowIndex = index + 2;  // Start from row 2 after header and divider
+        const rowIndex = index + 1;  // Start from row 1 right after header
         if (rowIndex >= 6) return;   // Don't exceed matrix bounds
         
         const timeStr = flight.time.padEnd(4);
