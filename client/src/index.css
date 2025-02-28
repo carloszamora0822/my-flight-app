@@ -239,3 +239,24 @@ body {
     color: #c5c5c5;
     font-style: italic;
   }
+  
+  /* Placeholder styling */
+  ::placeholder {
+    color: #999;
+    opacity: 0.7;
+    font-style: italic;
+  }
+  
+  /* For Internet Explorer */
+  :-ms-input-placeholder {
+    color: #999;
+    opacity: 0.7;
+    font-style: italic;
+  }
+  
+  /* For Microsoft Edge */
+  ::-ms-input-placeholder {
+    color: #999;
+    opacity: 0.7;
+    font-style: italic;
+  }

@@ -1,18 +1,58 @@
 import { createVestaMatrix } from '../../vestaboard/vestaConversion';
 import { updateVestaboard } from '../../vestaboard/vestaboard';
+import fs from 'fs';
+import path from 'path';
 
-// In-memory storage for flights, capped at 5
+// Path to the data file
+const dataFilePath = path.join(process.cwd(), 'data', 'flights.json');
+
+// Ensure the data directory exists
+try {
+    if (!fs.existsSync(path.join(process.cwd(), 'data'))) {
+        fs.mkdirSync(path.join(process.cwd(), 'data'), { recursive: true });
+    }
+} catch (error) {
+    console.error('Error creating data directory:', error);
+}
+
+// Load flights from persistent storage, default to empty array if file doesn't exist
 let flights = [];
+try {
+    if (fs.existsSync(dataFilePath)) {
+        const fileData = fs.readFileSync(dataFilePath, 'utf8');
+        flights = JSON.parse(fileData);
+        console.log('Loaded flights from file:', flights.length);
+    } else {
+        // Create the file with an empty array if it doesn't exist
+        fs.writeFileSync(dataFilePath, JSON.stringify(flights), 'utf8');
+        console.log('Created new flights data file');
+    }
+} catch (error) {
+    console.error('Error loading flights from file:', error);
+    // Continue with an empty array
+}
+
 // Flag to track if we're currently updating the Vestaboard
 let isUpdatingVestaboard = false;
 // Timestamp of the last update
 let lastUpdateTime = 0;
+
+// Function to save flights to persistent storage
+function saveFlights() {
+    try {
+        fs.writeFileSync(dataFilePath, JSON.stringify(flights), 'utf8');
+        console.log('Saved flights to file:', flights.length);
+    } catch (error) {
+        console.error('Error saving flights to file:', error);
+    }
+}
 
 // Function to ensure we don't exceed 5 flights
 function capFlightsArray() {
     if (flights.length > 5) {
         console.log(`Capping flights array from ${flights.length} to 5 items`);
         flights = flights.slice(0, 5);
+        saveFlights(); // Save after capping
     }
 }
 
@@ -108,6 +148,9 @@ export default async function handler(req, res) {
             flights.push(newFlight);
             capFlightsArray();
             
+            // Save to persistent storage
+            saveFlights();
+            
             console.log('Added new flight:', newFlight);
 
             // Update Vestaboard with the current flights
@@ -139,6 +182,9 @@ export default async function handler(req, res) {
             const deletedFlight = flights[index];
             flights.splice(index, 1);
             console.log('Deleted flight at index', index, ':', deletedFlight);
+            
+            // Save to persistent storage
+            saveFlights();
 
             // Update Vestaboard with the current flights
             // This will handle rate limiting internally

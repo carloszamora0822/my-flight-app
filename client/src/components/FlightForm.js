@@ -52,6 +52,7 @@ function FlightForm({ addFlight }) {
           required
           pattern="[0-9]{4}"
           maxLength="4"
+          placeholder="(Ex. 1230)"
         />
       </div>
       <div className="form-group">
@@ -63,6 +64,7 @@ function FlightForm({ addFlight }) {
           onChange={(e) => setCallsign(e.target.value)}
           required
           maxLength="6"
+          placeholder="(Ex. DavidL)"
         />
       </div>
       <div className="form-group">
@@ -85,6 +87,7 @@ function FlightForm({ addFlight }) {
           onChange={(e) => setDestination(e.target.value)}
           required
           maxLength="6"
+          placeholder="(Ex. N32851)"
         />
       </div>
       <button type="submit">Submit</button>
