@@ -1,43 +1,8 @@
 import { createEventMatrix } from '../../vestaboard/eventConversion';
 import { updateVestaboard } from '../../vestaboard/vestaboard';
-import fs from 'fs';
-import path from 'path';
+import { getCollection } from '../../lib/mongodb';
 
-// Helper to get proper root path that works in all environments
-function getRootPath() {
-    // Check if the data directory exists at different potential root paths
-    const potentialPaths = [
-        // Current working directory
-        process.cwd(),
-        // Up one level from current directory
-        path.join(process.cwd(), '..'),
-        // Absolute path to project root
-        '/Users/carloszamorawork/my-flight-app',
-        // Relative path from this file (up 2 levels)
-        path.join(__dirname, '..', '..')
-    ];
-    
-    for (const potentialPath of potentialPaths) {
-        const dataPath = path.join(potentialPath, 'data');
-        if (fs.existsSync(dataPath)) {
-            console.log('Found data directory at:', dataPath);
-            return potentialPath;
-        }
-    }
-    
-    // If no existing data directory found, create one at process.cwd()
-    const dataPath = path.join(process.cwd(), 'data');
-    console.log('Creating data directory at:', dataPath);
-    fs.mkdirSync(dataPath, { recursive: true });
-    return process.cwd();
-}
-
-// Path to events data file
-const rootPath = getRootPath();
-const eventsFilePath = path.join(rootPath, 'data', 'events.json');
-console.log('Using events data file at:', eventsFilePath);
-
-// In-memory cache of events (will be loaded from file)
+// In-memory cache for the current request
 let eventsCache = [];
 
 // Flag to track if we're currently updating the Vestaboard
@@ -46,74 +11,58 @@ let isUpdatingVestaboard = false;
 let lastUpdateTime = 0;
 
 /**
- * Load events from the data file
- * This is called on every request to ensure data is fresh
+ * Load events from the database
  */
-function loadEvents() {
+async function loadEvents() {
     try {
-        // Create data directory if it doesn't exist
-        const dataDir = path.join(rootPath, 'data');
-        if (!fs.existsSync(dataDir)) {
-            console.log('Creating data directory:', dataDir);
-            fs.mkdirSync(dataDir, { recursive: true });
-        }
-
-        // Check if file exists, if not create empty file
-        if (!fs.existsSync(eventsFilePath)) {
-            console.log('Events file not found, creating empty file');
-            fs.writeFileSync(eventsFilePath, JSON.stringify([]));
-            return [];
-        }
-
-        // Read and parse file
-        const fileData = fs.readFileSync(eventsFilePath, 'utf8');
-        console.log('Raw events data from file:', fileData);
+        console.log('Loading events from MongoDB...');
+        const collection = await getCollection('events');
+        const events = await collection.find({}).sort({ _id: -1 }).limit(5).toArray();
         
-        // Handle empty file case
-        if (!fileData || fileData.trim() === '') {
-            console.log('Events file is empty, initializing with empty array');
-            fs.writeFileSync(eventsFilePath, JSON.stringify([]));
-            return [];
-        }
+        console.log(`Loaded ${events.length} events from MongoDB`);
         
-        const events = JSON.parse(fileData);
-        console.log(`Loaded ${events.length} events from file`);
-        return Array.isArray(events) ? events : [];
+        // Transform from MongoDB document to event object
+        return events.map(doc => ({
+            date: doc.date || '',
+            time: doc.time || '',
+            description: doc.description || ''
+        }));
     } catch (error) {
-        console.error('Error loading events from file:', error);
-        // If we hit an error reading the file, try to reset it
-        try {
-            fs.writeFileSync(eventsFilePath, JSON.stringify([]));
-        } catch (writeError) {
-            console.error('Error resetting events file:', writeError);
-        }
+        console.error('Error loading events from MongoDB:', error);
         return []; // Return empty array on error
     }
 }
 
 /**
- * Save events to the data file
+ * Save events to the database
  * @param {Array} events The events to save
  */
-function saveEvents(events) {
+async function saveEvents(events) {
     try {
-        // Create data directory if it doesn't exist
-        const dataDir = path.join(rootPath, 'data');
-        if (!fs.existsSync(dataDir)) {
-            console.log('Creating data directory:', dataDir);
-            fs.mkdirSync(dataDir, { recursive: true });
-        }
-
-        console.log(`Saving ${events.length} events to file:`, eventsFilePath);
+        console.log(`Saving ${events.length} events to MongoDB...`);
         
-        // Write events to file
-        fs.writeFileSync(eventsFilePath, JSON.stringify(events, null, 2));
-        console.log(`Saved ${events.length} events to file`);
+        const collection = await getCollection('events');
+        
+        // Clear existing events and insert new ones
+        await collection.deleteMany({});
+        
+        if (events.length > 0) {
+            await collection.insertMany(events.map(event => ({
+                date: event.date || '',
+                time: event.time || '',
+                description: event.description || '',
+                createdAt: new Date()
+            })));
+        }
+        
+        console.log(`Saved ${events.length} events to MongoDB`);
         
         // Update the in-memory cache
         eventsCache = [...events];
+        return events;
     } catch (error) {
-        console.error('Error saving events to file:', error);
+        console.error('Error saving events to MongoDB:', error);
+        return eventsCache; // Return cached data on error
     }
 }
 
@@ -183,8 +132,8 @@ export default async function handler(req, res) {
 
     if (req.method === 'OPTIONS') return res.status(200).end();
 
-    // Always load events from file to ensure we have the latest data
-    eventsCache = loadEvents();
+    // Always load events from database to ensure we have the latest data
+    eventsCache = await loadEvents();
 
     // Get all events
     if (req.method === 'GET') {
@@ -197,57 +146,44 @@ export default async function handler(req, res) {
         }
     }
 
-    // Add new event or refresh vestaboard
+    // Add new event
     if (req.method === 'POST') {
         try {
-            // If it's an events list, use it to update the Vestaboard
-            if (req.body.events && Array.isArray(req.body.events)) {
-                const events = req.body.events;
-                console.log('Received events list with length:', events.length);
-                
-                // Cap events to 5 and update Vestaboard with the events
-                await updateVestaboardWithEvents(events);
-                
-                return res.status(200).json({
-                    success: true,
-                    events: events
-                });
-            }
-            // If it's a single new event to add
-            else if (req.body.date && req.body.time && req.body.description) {
-                const newEvent = {
-                    date: req.body.date,
-                    time: req.body.time,
-                    description: req.body.description
-                };
-                
-                console.log('Adding new event:', newEvent);
-                
-                // Add to events array
-                const updatedEvents = [...eventsCache, newEvent];
-                
-                // Cap to 5 events
-                const capped = capEventsArray(updatedEvents);
-                
-                // Save to file
-                saveEvents(capped);
-                
-                // Update Vestaboard with the events if sendToVesta is true
-                if (req.body.sendToVesta) {
-                    await updateVestaboardWithEvents(capped);
-                }
-                
-                return res.status(200).json({
-                    success: true,
-                    events: capped
-                });
-            }
-            else {
+            // Validate request body
+            if (!req.body.date || !req.body.time || !req.body.description) {
                 return res.status(400).json({ 
                     success: false,
-                    message: 'Invalid request format' 
+                    message: 'Missing required fields: date, time, description' 
                 });
             }
+            
+            // Enforce character limits
+            const newEvent = {
+                date: (req.body.date || '').substring(0, 5),         // Limit to 5 characters
+                time: (req.body.time || '').substring(0, 5),         // Limit to 5 characters
+                description: (req.body.description || '').substring(0, 10)  // Limit to 10 characters
+            };
+            
+            console.log('Adding new event:', newEvent);
+            
+            // Add to events array
+            const updatedEvents = [...eventsCache, newEvent];
+            
+            // Cap to 5 events
+            const capped = capEventsArray(updatedEvents);
+            
+            // Save to database
+            await saveEvents(capped);
+            
+            // Update Vestaboard with the events if sendToVesta is true
+            if (req.body.sendToVesta) {
+                await updateVestaboardWithEvents(capped);
+            }
+            
+            return res.status(200).json({
+                success: true,
+                events: capped
+            });
         } catch (error) {
             console.error('Failed to add event:', error);
             return res.status(500).json({ message: 'Failed to add event' });
@@ -271,8 +207,8 @@ export default async function handler(req, res) {
             updatedEvents.splice(index, 1);
             console.log('Deleted event at index', index, ':', deletedEvent);
             
-            // Save updated events list to file
-            saveEvents(updatedEvents);
+            // Save updated events list to database
+            await saveEvents(updatedEvents);
             
             return res.status(200).json({
                 success: true,

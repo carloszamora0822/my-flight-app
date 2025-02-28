@@ -1,43 +1,8 @@
 import { createVestaMatrix } from '../../vestaboard/vestaConversion';
 import { updateVestaboard } from '../../vestaboard/vestaboard';
-import fs from 'fs';
-import path from 'path';
+import { getCollection } from '../../lib/mongodb';
 
-// Helper to get proper root path that works in all environments
-function getRootPath() {
-    // Check if the data directory exists at different potential root paths
-    const potentialPaths = [
-        // Current working directory
-        process.cwd(),
-        // Up one level from current directory
-        path.join(process.cwd(), '..'),
-        // Absolute path to project root
-        '/Users/carloszamorawork/my-flight-app',
-        // Relative path from this file (up 2 levels)
-        path.join(__dirname, '..', '..')
-    ];
-    
-    for (const potentialPath of potentialPaths) {
-        const dataPath = path.join(potentialPath, 'data');
-        if (fs.existsSync(dataPath)) {
-            console.log('Found data directory at:', dataPath);
-            return potentialPath;
-        }
-    }
-    
-    // If no existing data directory found, create one at process.cwd()
-    const dataPath = path.join(process.cwd(), 'data');
-    console.log('Creating data directory at:', dataPath);
-    fs.mkdirSync(dataPath, { recursive: true });
-    return process.cwd();
-}
-
-// Path to flight data file
-const rootPath = getRootPath();
-const flightsFilePath = path.join(rootPath, 'data', 'flights.json');
-console.log('Using flights data file at:', flightsFilePath);
-
-// In-memory cache of flights (will be loaded from file)
+// In-memory cache for the current request
 let flightsCache = [];
 
 // Flag to track if we're currently updating the Vestaboard
@@ -46,74 +11,60 @@ let isUpdatingVestaboard = false;
 let lastUpdateTime = 0;
 
 /**
- * Load flights from the data file
- * This is called on every request to ensure data is fresh
+ * Load flights from the database
  */
-function loadFlights() {
+async function loadFlights() {
     try {
-        // Create data directory if it doesn't exist
-        const dataDir = path.join(rootPath, 'data');
-        if (!fs.existsSync(dataDir)) {
-            console.log('Creating data directory:', dataDir);
-            fs.mkdirSync(dataDir, { recursive: true });
-        }
-
-        // Check if file exists, if not create empty file
-        if (!fs.existsSync(flightsFilePath)) {
-            console.log('Flights file not found, creating empty file');
-            fs.writeFileSync(flightsFilePath, JSON.stringify([]));
-            return [];
-        }
-
-        // Read and parse file
-        const fileData = fs.readFileSync(flightsFilePath, 'utf8');
-        console.log('Raw flights data from file:', fileData);
+        console.log('Loading flights from MongoDB...');
+        const collection = await getCollection('flights');
+        const flights = await collection.find({}).sort({ _id: -1 }).limit(10).toArray();
         
-        // Handle empty file case
-        if (!fileData || fileData.trim() === '') {
-            console.log('Flights file is empty, initializing with empty array');
-            fs.writeFileSync(flightsFilePath, JSON.stringify([]));
-            return [];
-        }
+        console.log(`Loaded ${flights.length} flights from MongoDB`);
         
-        const flights = JSON.parse(fileData);
-        console.log(`Loaded ${flights.length} flights from file`);
-        return Array.isArray(flights) ? flights : [];
+        // Transform from MongoDB document to flight object
+        return flights.map(doc => ({
+            time: doc.time || '',
+            callsign: doc.callsign || '',
+            type: doc.type || '',
+            destination: doc.destination || ''
+        }));
     } catch (error) {
-        console.error('Error loading flights from file:', error);
-        // If we hit an error reading the file, try to reset it
-        try {
-            fs.writeFileSync(flightsFilePath, JSON.stringify([]));
-        } catch (writeError) {
-            console.error('Error resetting flights file:', writeError);
-        }
+        console.error('Error loading flights from MongoDB:', error);
         return []; // Return empty array on error
     }
 }
 
 /**
- * Save flights to the data file
+ * Save flights to the database
  * @param {Array} flights The flights to save
  */
-function saveFlights(flights) {
+async function saveFlights(flights) {
     try {
-        // Create data directory if it doesn't exist
-        const dataDir = path.join(rootPath, 'data');
-        if (!fs.existsSync(dataDir)) {
-            console.log('Creating data directory:', dataDir);
-            fs.mkdirSync(dataDir, { recursive: true });
-        }
-
-        console.log(`Saving ${flights.length} flights to file:`, flightsFilePath);
+        console.log(`Saving ${flights.length} flights to MongoDB...`);
         
-        // Write flights to file
-        fs.writeFileSync(flightsFilePath, JSON.stringify(flights, null, 2));
-        console.log(`Saved ${flights.length} flights to file`);
+        const collection = await getCollection('flights');
+        
+        // Clear existing flights and insert new ones
+        await collection.deleteMany({});
+        
+        if (flights.length > 0) {
+            await collection.insertMany(flights.map(flight => ({
+                time: flight.time || '',
+                callsign: flight.callsign || '',
+                type: flight.type || '',
+                destination: flight.destination || '',
+                createdAt: new Date()
+            })));
+        }
+        
+        console.log(`Saved ${flights.length} flights to MongoDB`);
         
         // Update the in-memory cache
         flightsCache = [...flights];
+        return flights;
     } catch (error) {
-        console.error('Error saving flights to file:', error);
+        console.error('Error saving flights to MongoDB:', error);
+        return flightsCache; // Return cached data on error
     }
 }
 
@@ -183,8 +134,8 @@ export default async function handler(req, res) {
 
     if (req.method === 'OPTIONS') return res.status(200).end();
 
-    // Always load flights from file to ensure we have the latest data
-    flightsCache = loadFlights();
+    // Always load flights from database to ensure we have the latest data
+    flightsCache = await loadFlights();
 
     // Get all flights
     if (req.method === 'GET') {
@@ -230,8 +181,8 @@ export default async function handler(req, res) {
                 // Cap to 5 flights
                 const capped = capFlightsArray(updatedFlights);
                 
-                // Save to file
-                saveFlights(capped);
+                // Save to database
+                await saveFlights(capped);
                 
                 // Update Vestaboard with the flights if sendToVesta is true
                 if (req.body.sendToVesta) {
@@ -272,8 +223,8 @@ export default async function handler(req, res) {
             updatedFlights.splice(index, 1);
             console.log('Deleted flight at index', index, ':', deletedFlight);
             
-            // Save updated flights list to file
-            saveFlights(updatedFlights);
+            // Save updated flights list to database
+            await saveFlights(updatedFlights);
             
             return res.status(200).json({
                 success: true,
