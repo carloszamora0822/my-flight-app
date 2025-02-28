@@ -5,7 +5,6 @@ import FlightList from './components/FlightList';
 function App() {
   const [flights, setFlights] = useState([]);
   const [lastUpdateTime, setLastUpdateTime] = useState(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     fetchFlights();
@@ -16,8 +15,10 @@ function App() {
       const response = await fetch('/api/flights');
       const data = await response.json();
       console.log('Fetched flights:', data);
-      setFlights(Array.isArray(data) ? data : data.flights || []);
-      setLastUpdateTime(new Date());
+      setFlights(Array.isArray(data) ? data : []);
+      if (data.length > 0) {
+        setLastUpdateTime(new Date());
+      }
     } catch (error) {
       console.error('Error fetching flights:', error);
     }
@@ -34,8 +35,10 @@ function App() {
       console.log('Add flight response:', data);
       
       // Update the flights state with the new data
-      setFlights(data.flights || []);
-      setLastUpdateTime(new Date());
+      if (data.success && data.flights) {
+        setFlights(data.flights);
+        setLastUpdateTime(new Date());
+      }
       return data;
     } catch (error) {
       console.error('Error:', error);
@@ -56,8 +59,8 @@ function App() {
       const data = await response.json();
       console.log('Delete response:', data);
       
-      if (data.success) {
-        setFlights(data.flights || []);
+      if (data.success && data.flights) {
+        setFlights(data.flights);
         setLastUpdateTime(new Date());
       } else {
         throw new Error(data.message || 'Failed to delete flight');
@@ -65,34 +68,6 @@ function App() {
     } catch (error) {
       console.error('Error deleting flight:', error);
       alert('Error deleting flight. Please try again.');
-    }
-  };
-
-  const refreshVestaboard = async () => {
-    try {
-      setIsRefreshing(true);
-      // Call a new endpoint to manually refresh the Vestaboard
-      const response = await fetch('/api/flights/refresh', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        setFlights(data.flights || []);
-        setLastUpdateTime(new Date());
-        alert('Vestaboard refreshed successfully');
-      } else {
-        alert('Failed to refresh Vestaboard: ' + (data.message || 'Unknown error'));
-      }
-    } catch (error) {
-      console.error('Error refreshing Vestaboard:', error);
-      alert('Error refreshing Vestaboard. Please try again.');
-    } finally {
-      setIsRefreshing(false);
     }
   };
 
@@ -109,15 +84,8 @@ function App() {
   return (
     <div className="App">
       <h1>Flight Schedule</h1>
-      <div className="refresh-section">
+      <div className="status-section">
         <p>Last Vestaboard update: {formatLastUpdateTime()}</p>
-        <button 
-          onClick={refreshVestaboard} 
-          disabled={isRefreshing}
-          className="refresh-button"
-        >
-          {isRefreshing ? 'Refreshing...' : 'Refresh Vestaboard'}
-        </button>
         <p className="note">
           (Limited to 5 flights. Newest entries will replace oldest ones.)
         </p>

@@ -1,83 +1,35 @@
 import { createVestaMatrix } from '../../vestaboard/vestaConversion';
 import { updateVestaboard } from '../../vestaboard/vestaboard';
-import fs from 'fs';
-import path from 'path';
 
-// Path to the data file - using an absolute path to ensure it works in all environments
-const DATA_DIR = path.join(process.cwd(), 'data');
-const DATA_FILE = path.join(DATA_DIR, 'flights.json');
-
-// Ensure the data directory exists
-if (!fs.existsSync(DATA_DIR)) {
-    try {
-        fs.mkdirSync(DATA_DIR, { recursive: true });
-        console.log('Created data directory:', DATA_DIR);
-    } catch (error) {
-        console.error('Failed to create data directory:', error);
-    }
-}
-
-/**
- * Load flights from the JSON file
- * @returns {Array} Array of flight objects
- */
-function loadFlights() {
-    try {
-        if (fs.existsSync(DATA_FILE)) {
-            const data = fs.readFileSync(DATA_FILE, 'utf8');
-            const flights = JSON.parse(data);
-            console.log(`Loaded ${flights.length} flights from storage`);
-            return Array.isArray(flights) ? flights : [];
-        } else {
-            console.log('No flight data file found, starting with empty array');
-            saveFlights([]);
-            return [];
-        }
-    } catch (error) {
-        console.error('Error loading flights from file:', error);
-        return [];
-    }
-}
-
-/**
- * Save flights to the JSON file
- * @param {Array} flights Array of flight objects to save
- */
-function saveFlights(flights) {
-    try {
-        // Ensure directory exists before writing
-        if (!fs.existsSync(DATA_DIR)) {
-            fs.mkdirSync(DATA_DIR, { recursive: true });
-        }
-        
-        fs.writeFileSync(DATA_FILE, JSON.stringify(flights, null, 2), 'utf8');
-        console.log(`Saved ${flights.length} flights to storage`);
-        return true;
-    } catch (error) {
-        console.error('Error saving flights to file:', error);
-        return false;
-    }
-}
-
-// Load flights on module initialization
-let flights = loadFlights();
+// In-memory cache of flights
+let flightsCache = [];
 
 // Flag to track if we're currently updating the Vestaboard
 let isUpdatingVestaboard = false;
 // Timestamp of the last update
 let lastUpdateTime = 0;
 
-// Function to ensure we don't exceed 5 flights
-function capFlightsArray() {
+// For Vercel, we need to use an approach that doesn't rely on local file storage
+// Instead, we'll send the full list with every response and expect it back with every request
+
+/**
+ * Function to ensure we don't exceed 5 flights 
+ * @param {Array} flights The flights array to cap
+ * @returns {Array} The capped flights array
+ */
+function capFlightsArray(flights) {
     if (flights.length > 5) {
         console.log(`Capping flights array from ${flights.length} to 5 items`);
-        flights = flights.slice(0, 5);
-        saveFlights(flights);
+        return flights.slice(0, 5);
     }
+    return flights;
 }
 
-// Simple function to update the Vestaboard with the current flights
-async function updateVestaboardWithCurrentFlights() {
+/**
+ * Update the Vestaboard with the given flights
+ * @param {Array} flights The flights to display
+ */
+async function updateVestaboardWithFlights(flights) {
     // If already updating, don't do anything
     if (isUpdatingVestaboard) {
         console.log('Already updating Vestaboard, skipping this update request');
@@ -87,9 +39,9 @@ async function updateVestaboardWithCurrentFlights() {
     try {
         // Set flag to prevent concurrent updates
         isUpdatingVestaboard = true;
-        console.log('Starting Vestaboard update with current flights:', flights.length);
+        console.log('Starting Vestaboard update with flights:', flights.length);
 
-        // Create matrix with current flights
+        // Create matrix with flights
         const matrix = createVestaMatrix([...flights]);
         
         // Calculate time since last update
@@ -109,6 +61,9 @@ async function updateVestaboardWithCurrentFlights() {
         // Update last update time
         lastUpdateTime = Date.now();
         console.log('Vestaboard updated successfully at', new Date(lastUpdateTime).toISOString());
+        
+        // Update cache
+        flightsCache = [...flights];
     } catch (error) {
         console.error('Error updating Vestaboard:', error);
     } finally {
@@ -126,39 +81,11 @@ export default async function handler(req, res) {
 
     if (req.method === 'OPTIONS') return res.status(200).end();
 
-    // Manual refresh endpoint
-    if (req.method === 'POST' && req.url.endsWith('/refresh')) {
-        try {
-            console.log('Manual refresh requested');
-            
-            // Reload flights from storage to ensure we have the latest data
-            flights = loadFlights();
-            
-            // Force an immediate update of the Vestaboard
-            await updateVestaboardWithCurrentFlights();
-            
-            return res.status(200).json({
-                success: true,
-                message: 'Vestaboard refresh initiated',
-                flights: flights
-            });
-        } catch (error) {
-            console.error('Error during manual refresh:', error);
-            return res.status(500).json({ 
-                success: false,
-                message: 'Failed to refresh Vestaboard' 
-            });
-        }
-    }
-
     // Get all flights
     if (req.method === 'GET') {
         try {
-            // Reload flights from storage to ensure we have the latest data
-            flights = loadFlights();
-            
-            console.log('GET request received, returning flights:', flights.length);
-            return res.status(200).json(flights || []);
+            console.log('GET request received, returning flights:', flightsCache.length);
+            return res.status(200).json(flightsCache);
         } catch (error) {
             console.error('Error in GET:', error);
             return res.status(500).json({ message: 'Failed to fetch flights' });
@@ -168,27 +95,47 @@ export default async function handler(req, res) {
     // Add new flight
     if (req.method === 'POST') {
         try {
-            const newFlight = req.body;
-            
-            // Reload flights to ensure we have the latest data
-            flights = loadFlights();
-            
-            // Add to flights array
-            flights.push(newFlight);
-            
-            // Cap and save
-            capFlightsArray();
-            
-            console.log('Added new flight:', newFlight);
-
-            // Update Vestaboard with the current flights
-            // This will handle rate limiting internally
-            updateVestaboardWithCurrentFlights();
-
-            return res.status(200).json({
-                success: true,
-                flights: flights
-            });
+            // If it's a submission with the current flights list
+            if (req.body.flights && Array.isArray(req.body.flights)) {
+                const flights = req.body.flights;
+                console.log('Received flights list with length:', flights.length);
+                
+                // Cap flights to 5
+                const capped = capFlightsArray(flights);
+                
+                // Update Vestaboard with these flights
+                await updateVestaboardWithFlights(capped);
+                
+                return res.status(200).json({
+                    success: true,
+                    flights: capped
+                });
+            }
+            // If it's a single new flight to add
+            else if (req.body.time && req.body.callsign) {
+                const newFlight = req.body;
+                console.log('Adding new flight:', newFlight);
+                
+                // Add to flights array
+                const updatedFlights = [...flightsCache, newFlight];
+                
+                // Cap flights to 5
+                const capped = capFlightsArray(updatedFlights);
+                
+                // Update Vestaboard with these flights
+                await updateVestaboardWithFlights(capped);
+                
+                return res.status(200).json({
+                    success: true,
+                    flights: capped
+                });
+            }
+            else {
+                return res.status(400).json({ 
+                    success: false,
+                    message: 'Invalid request format' 
+                });
+            }
         } catch (error) {
             console.error('Failed to add flight:', error);
             return res.status(500).json({ message: 'Failed to add flight' });
@@ -200,30 +147,24 @@ export default async function handler(req, res) {
         try {
             const index = parseInt(req.url.split('/').pop());
             
-            // Reload flights to ensure we have the latest data
-            flights = loadFlights();
-            
-            if (isNaN(index) || index < 0 || index >= flights.length) {
+            if (isNaN(index) || index < 0 || index >= flightsCache.length) {
                 return res.status(400).json({ 
                     success: false,
                     message: 'Invalid index'
                 });
             }
 
-            const deletedFlight = flights[index];
-            flights.splice(index, 1);
+            const updatedFlights = [...flightsCache];
+            const deletedFlight = updatedFlights[index];
+            updatedFlights.splice(index, 1);
             console.log('Deleted flight at index', index, ':', deletedFlight);
             
-            // Save to storage
-            saveFlights(flights);
-
             // Update Vestaboard with the current flights
-            // This will handle rate limiting internally
-            updateVestaboardWithCurrentFlights();
+            await updateVestaboardWithFlights(updatedFlights);
 
             return res.status(200).json({
                 success: true,
-                flights: flights
+                flights: updatedFlights
             });
         } catch (error) {
             console.error('Failed to delete flight:', error);
