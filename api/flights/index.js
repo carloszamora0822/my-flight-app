@@ -206,9 +206,12 @@ export default async function handler(req, res) {
                     // Continue with the local changes even if database save fails
                 }
                 
-                // Update Vestaboard with the flights if sendToVesta is true
-                if (req.body.sendToVesta) {
+                // Always update Vestaboard with the flights
+                try {
                     await updateVestaboardWithFlights(capped);
+                } catch (vestaError) {
+                    console.error('Vestaboard update error:', vestaError);
+                    // Continue even if Vestaboard update fails
                 }
                 
                 return res.status(200).json({
@@ -255,6 +258,14 @@ export default async function handler(req, res) {
             } catch (dbError) {
                 console.error('Database save error on delete:', dbError);
                 // Continue with the local changes even if database save fails
+            }
+            
+            // Always update Vestaboard after deletion
+            try {
+                await updateVestaboardWithFlights(updatedFlights);
+            } catch (vestaError) {
+                console.error('Vestaboard update error on delete:', vestaError);
+                // Continue even if Vestaboard update fails
             }
             
             return res.status(200).json({

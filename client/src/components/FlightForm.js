@@ -34,7 +34,8 @@ function FlightForm({ addFlight }) {
         time, 
         callsign, 
         type, 
-        destination 
+        destination,
+        sendToVesta: true // Always send to Vestaboard automatically
       });
       console.log('Flight submission result:', response);
       
@@ -108,7 +109,7 @@ function FlightForm({ addFlight }) {
           placeholder="(Ex. N32851)"
         />
       </div>
-      <button type="submit">Submit</button>
+      <button type="submit">Submit Flight & Update Vestaboard</button>
     </form>
   );
 }
