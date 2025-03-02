@@ -21,6 +21,18 @@
       "dest": "/api/flights/index.js"
     },
     {
+      "src": "/api/events",
+      "dest": "/api/events/index.js"
+    },
+    {
+      "src": "/api/events/(.*)",
+      "dest": "/api/events/index.js"
+    },
+    {
+      "src": "/api/power-automate",
+      "dest": "/api/power-automate/index.js"
+    },
+    {
       "src": "/(.*)",
       "dest": "/client/$1"
     }
