@@ -10,16 +10,19 @@ function EventForm({ addEvent }) {
     e.preventDefault();
     
     // Validation
-    if (!month || !day || !time || !description) {
+    if (!month || !day || !description) {
       alert("Please fill in all required fields");
       return;
     }
     
-    // Validate time format (military time)
-    const timeNum = parseInt(time);
-    if (time.length !== 4 || isNaN(timeNum) || timeNum < 0 || timeNum > 2359) {
-      alert("Invalid time format. Please use military time (0000-2359)");
-      return;
+    // Time is optional now
+    if (time) {
+      // Validate time format (military time)
+      const timeNum = parseInt(time);
+      if (time.length !== 4 || isNaN(timeNum) || timeNum < 0 || timeNum > 2359) {
+        alert("Invalid time format. Please use military time (0000-2359)");
+        return;
+      }
     }
     
     // Validate month and day
@@ -36,8 +39,8 @@ function EventForm({ addEvent }) {
       return;
     }
     
-    if (description.length > 10) {
-      alert("Description must be 10 characters or less");
+    if (description.length > 16) {
+      alert("Description must be 16 characters or less");
       return;
     }
 
@@ -105,13 +108,12 @@ function EventForm({ addEvent }) {
         </div>
       </div>
       <div className="form-group">
-        <label htmlFor="event-time">Time (Military):</label>
+        <label htmlFor="event-time">Time (Military, Optional):</label>
         <input
           type="text"
           id="event-time"
           value={time}
           onChange={(e) => setTime(e.target.value)}
-          required
           pattern="[0-9]{4}"
           maxLength="4"
           placeholder="(Ex. 1230)"
@@ -126,8 +128,8 @@ function EventForm({ addEvent }) {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           required
-          placeholder="(Max 10 chars)"
-          maxLength="10"
+          placeholder="(Max 16 chars)"
+          maxLength="16"
           className="narrow-input"
         />
       </div>

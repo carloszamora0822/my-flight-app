@@ -27,12 +27,12 @@ function getFormattedDate() {
     const today = new Date();
     const month = (today.getMonth() + 1).toString().padStart(2, '0');
     const day = today.getDate().toString().padStart(2, '0');
-    return `${month}${day}`;
+    return `${month}/${day}`;
 }
 
 function createHeaderRow() {
     const date = getFormattedDate();
-    const header = ('CHECKRIDE ' + date).padEnd(22);
+    const header = ('CHECKRIDES ' + date).padEnd(22);
     return stringToVestaboard(header);
 }
 
@@ -65,7 +65,7 @@ export function createVestaMatrix(flights) {
     ];
 
     // add header with VBT name
-    const header = 'VBT FLIGHT BOARD'.split('').map(char => VESTA_CHARS[char.toUpperCase()] || 0);
+    const header = `CHECKRIDES ${getFormattedDate()}`.split('').map(char => VESTA_CHARS[char.toUpperCase()] || 0);
     matrix[0] = [...header, ...Array(22 - header.length).fill(0)];
     
     // No divider line - removed to allow for 5 items

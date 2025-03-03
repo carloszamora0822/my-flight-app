@@ -186,10 +186,10 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
         try {
             // Validate request body
-            if (!req.body.date || !req.body.time || !req.body.description) {
+            if (!req.body.date || !req.body.description) {
                 return res.status(400).json({ 
                     success: false,
-                    message: 'Missing required fields: date, time, description' 
+                    message: 'Missing required fields: date, description' 
                 });
             }
             
@@ -197,7 +197,7 @@ export default async function handler(req, res) {
             const newEvent = {
                 date: (req.body.date || '').substring(0, 5),         // Limit to 5 characters
                 time: (req.body.time || '').substring(0, 4),         // Limit to 4 characters
-                description: (req.body.description || '').substring(0, 10)  // Limit to 10 characters
+                description: (req.body.description || '').substring(0, 16)  // Limit to 16 characters
             };
             
             console.log('Adding new event:', newEvent);

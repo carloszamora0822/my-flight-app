@@ -58,10 +58,10 @@ export function createEventMatrix(events) {
   // Create empty matrix
   const matrix = createEmptyMatrix();
   
-  // Add title with VBT name
-  const titleCodes = stringToVestaCodes('VBT EVENT BOARD');
+  // Add title with "UPCOMING EVENTS"
+  const titleCodes = stringToVestaCodes('UPCOMING EVENTS');
   for (let i = 0; i < titleCodes.length; i++) {
-    if (i < 22) matrix[0][i + 3] = titleCodes[i];
+    if (i < 22) matrix[0][i] = titleCodes[i];
   }
   
   // Add events (up to 5)
@@ -74,13 +74,11 @@ export function createEventMatrix(events) {
     
     // Ensure date is max 5 characters
     const dateStr = (event.date || '').substring(0, 5).padEnd(5, ' ');
-    // Ensure time is properly formatted
-    const timeStr = (event.time || '').substring(0, 5).padEnd(5, ' ');
-    // Limit description to 10 characters
-    const descStr = (event.description || '').substring(0, 10).padEnd(10, ' ');
+    // Limit description to 16 characters
+    const descStr = (event.description || '').substring(0, 16).padEnd(16, ' ');
     
-    // Format event line: "MM/DD HH:MM Description"
-    let eventLine = `${dateStr} ${timeStr} ${descStr}`;
+    // Format event line: "MM/DD [description]"
+    let eventLine = `${dateStr} ${descStr}`;
     eventLine = eventLine.substring(0, 22); // Ensure it fits
     
     console.log(`Formatting event line: "${eventLine}"`);
