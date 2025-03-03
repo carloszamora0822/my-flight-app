@@ -4,7 +4,7 @@ import { createEventMatrix } from '../vestaboard/eventConversion';
 
 /**
  * API endpoint to fetch flight or event data in Vestaboard matrix format
- * Enhanced for Power Automate integration
+ * Enhanced for Power Automate integration - supports matrix or text format
  */
 export default async function handler(req, res) {
     // CORS headers
@@ -24,11 +24,14 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Check if this is a Power Automate request (which won't have the API key)
+        // Check if this is a formatted text request for Vestaboard Read-Write API
+        const useTextFormat = req.query.format === 'text';
+
+        // Check if this is a Power Automate request (will return raw matrix)
         const isPowerAutomate = req.query.powerautomate === 'true';
         
         // API key validation - not required for Power Automate requests
-        if (!isPowerAutomate) {
+        if (!isPowerAutomate && !useTextFormat) {
             const apiKey = req.query.apiKey || req.headers['x-api-key'];
             const validApiKey = process.env.EXTERNAL_API_KEY || 'flight-app-default-key';
             
@@ -55,6 +58,79 @@ export default async function handler(req, res) {
         // Connect to database
         const { db } = await connectToDatabase();
         
+        // For text format (Vestaboard Read-Write API)
+        if (useTextFormat) {
+            let resultText = '';
+            
+            if (type === 'flights') {
+                // Get current date in MM/DD format
+                const today = new Date();
+                const month = (today.getMonth() + 1).toString().padStart(2, '0');
+                const day = today.getDate().toString().padStart(2, '0');
+                const dateStr = `${month}/${day}`;
+                
+                // Get all flights
+                const flights = await db.collection('flights').find({}).toArray();
+                
+                // Sort by time
+                const sortedFlights = [...flights].sort((a, b) => {
+                    return parseInt(a.time) - parseInt(b.time);
+                });
+                
+                // Create a header
+                resultText = `CHECKLIST: ${dateStr} FLIGHTS `;
+                
+                // Add each flight
+                for (const flight of sortedFlights) {
+                    if (resultText.length > 0) resultText += ' ';
+                    resultText += `${flight.name.toUpperCase()} ${flight.id} ${flight.dest.toUpperCase()}`;
+                    
+                    // Don't make the text too long
+                    if (resultText.length > 120) break;
+                }
+            } else {
+                // Get all events
+                const events = await db.collection('events').find({}).toArray();
+                
+                // Sort by date
+                const sortedEvents = [...events].sort((a, b) => {
+                    // First sort by date
+                    const dateComparison = a.date.localeCompare(b.date);
+                    if (dateComparison !== 0) return dateComparison;
+                    
+                    // Then by time if date is the same and time exists
+                    if (a.time && b.time) {
+                        return a.time.localeCompare(b.time);
+                    }
+                    return 0;
+                });
+                
+                // Create a header
+                resultText = 'UPCOMING EVENTS: ';
+                
+                // Add each event
+                for (const event of sortedEvents) {
+                    if (resultText.length > 0) resultText += ' ';
+                    
+                    // Format date for display
+                    const dateParts = event.date.split('-');
+                    const month = dateParts[1];
+                    const day = dateParts[2];
+                    
+                    resultText += `${month}/${day} ${event.title.toUpperCase()}`;
+                    
+                    // Don't make the text too long
+                    if (resultText.length > 120) break;
+                }
+            }
+            
+            // Return data in format for Vestaboard Read-Write API
+            return res.status(200).json({
+                text: resultText
+            });
+        }
+        
+        // Matrix format (Vestaboard Subscription API or display)
         // Get data based on type
         let matrix;
         
