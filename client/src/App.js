@@ -249,15 +249,27 @@ function App() {
         return;
       }
       
-      // Send a request to update Vestaboard without adding new events
-      const response = await fetch('/api/vestaboard?type=events', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+      // Make sure each event has the required fields
+      for (const event of events) {
+        if (!event.date || !event.time || !event.description) {
+          alert('Some events are missing required fields (date, time, or description)');
+          setIsUpdatingEvents(false);
+          return;
+        }
+      }
+      
+      // Send first event to Vestaboard since API expects a single event
+      const eventToSend = events[0];
+      
+      const response = await fetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventToSend)
       });
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`Error response from vestaboard API: ${response.status} - ${errorText}`);
+        console.error(`Error response from events API: ${response.status} - ${errorText}`);
         alert(`Failed to update Vestaboard: ${errorText}`);
         setIsUpdatingEvents(false);
         return;
