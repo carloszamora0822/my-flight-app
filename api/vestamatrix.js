@@ -63,13 +63,20 @@ export default async function handler(req, res) {
             let resultText = '';
             
             if (type === 'flights') {
-                // Get current date in MM/DD format using Central Standard Time
-                const now = new Date();
-                // Adjust to Central Time (UTC-6)
-                const centralTime = new Date(now.getTime() - (now.getTimezoneOffset() + 360) * 60000);
-                const month = (centralTime.getMonth() + 1).toString().padStart(2, '0');
-                const day = centralTime.getDate().toString().padStart(2, '0');
-                const dateStr = `${month}/${day}`;
+                // Get date in Chicago timezone (America/Chicago)
+                const chicagoDate = new Date().toLocaleString('en-US', {
+                    timeZone: 'America/Chicago',
+                    month: '2-digit',
+                    day: '2-digit',
+                    timeZoneName: 'short'
+                });
+                
+                // Parse out just the date part MM/DD
+                const dateParts = chicagoDate.split(',')[0].split('/');
+                const dateStr = `${dateParts[0]}/${dateParts[1]}`;
+                
+                // Log for debugging
+                console.log(`Using date: ${dateStr}`);
                 
                 // Get all flights
                 const flights = await db.collection('flights').find({}).toArray();
