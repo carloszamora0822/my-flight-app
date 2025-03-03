@@ -14,6 +14,9 @@ export default function handler(req, res) {
     // Get type from query parameter or default to "flights"
     const type = req.query.type || 'flights';
     
+    // Check if this is for Power Automate
+    const isPowerAutomate = req.query.powerautomate === 'true';
+    
     // Get data from request body or use empty array
     const data = req.body || [];
     
@@ -30,7 +33,13 @@ export default function handler(req, res) {
     }
     
     // Return matrix
-    res.status(200).json(matrix);
+    if (isPowerAutomate) {
+      // For Power Automate, just return the characters array without wrapping object
+      res.status(200).json(matrix);
+    } else {
+      // For normal calls, return wrapped object
+      res.status(200).json({ characters: matrix });
+    }
   } catch (error) {
     console.error('Error creating matrix:', error);
     res.status(500).json({ 
