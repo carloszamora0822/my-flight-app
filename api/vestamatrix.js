@@ -1,6 +1,7 @@
 import { connectToDatabase } from '../lib/mongodb';
 import { createVestaMatrix } from '../vestaboard/vestaConversion';
 import { createEventMatrix } from '../vestaboard/eventConversion';
+import { format, utcToZonedTime } from 'date-fns-tz';
 
 /**
  * API endpoint to fetch flight or event data in Vestaboard matrix format
@@ -63,20 +64,19 @@ export default async function handler(req, res) {
             let resultText = '';
             
             if (type === 'flights') {
-                // Get date in Chicago timezone (America/Chicago)
-                const chicagoDate = new Date().toLocaleString('en-US', {
-                    timeZone: 'America/Chicago',
-                    month: '2-digit',
-                    day: '2-digit',
-                    timeZoneName: 'short'
-                });
+                // Get the current date in Central Time (Chicago)
+                const now = new Date();
                 
-                // Parse out just the date part MM/DD
-                const dateParts = chicagoDate.split(',')[0].split('/');
-                const dateStr = `${dateParts[0]}/${dateParts[1]}`;
+                // Force timezone to be Central Time
+                const tz = 'America/Chicago';
+                const centralTimeNow = utcToZonedTime(now, tz);
+                
+                // Format as MM/DD
+                const dateStr = format(centralTimeNow, 'MM/dd', { timeZone: tz });
                 
                 // Log for debugging
-                console.log(`Using date: ${dateStr}`);
+                console.log(`Server date: ${now.toISOString()}`);
+                console.log(`Converted to Central time: ${dateStr}`);
                 
                 // Get all flights
                 const flights = await db.collection('flights').find({}).toArray();
