@@ -63,10 +63,12 @@ export default async function handler(req, res) {
             let resultText = '';
             
             if (type === 'flights') {
-                // Get current date in MM/DD format
-                const today = new Date();
-                const month = (today.getMonth() + 1).toString().padStart(2, '0');
-                const day = today.getDate().toString().padStart(2, '0');
+                // Get current date in MM/DD format using Central Standard Time
+                const now = new Date();
+                // Adjust to Central Time (UTC-6)
+                const centralTime = new Date(now.getTime() - (now.getTimezoneOffset() + 360) * 60000);
+                const month = (centralTime.getMonth() + 1).toString().padStart(2, '0');
+                const day = centralTime.getDate().toString().padStart(2, '0');
                 const dateStr = `${month}/${day}`;
                 
                 // Get all flights
