@@ -264,7 +264,10 @@ function App() {
       const response = await fetch('/api/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(eventToSend)
+        body: JSON.stringify({
+          ...eventToSend,
+          updateVestaboardOnly: true  // Flag to indicate we're just updating the Vestaboard
+        })
       });
       
       if (!response.ok) {

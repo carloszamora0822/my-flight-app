@@ -185,6 +185,28 @@ export default async function handler(req, res) {
     // Add new event
     if (req.method === 'POST') {
         try {
+            // Check if this is just a Vestaboard update request
+            if (req.body.updateVestaboardOnly === true) {
+                console.log('Received Vestaboard-only update request');
+                
+                // Get the current events from the database
+                const currentEvents = await loadEvents();
+                
+                // Update Vestaboard with current events
+                try {
+                    await updateVestaboardWithEvents(currentEvents);
+                } catch (vestaError) {
+                    console.error('Vestaboard update error:', vestaError);
+                    // Continue even if Vestaboard update fails
+                }
+                
+                return res.status(200).json({
+                    success: true,
+                    events: currentEvents,
+                    message: 'Vestaboard updated successfully'
+                });
+            }
+            
             // Validate request body
             if (!req.body.date || !req.body.description) {
                 return res.status(400).json({ 
