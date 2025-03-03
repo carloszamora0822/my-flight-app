@@ -1,11 +1,10 @@
 import { connectToDatabase } from '../lib/mongodb';
-import { createFlightMatrix } from '../vestaboard/flightConversion';
+import { createVestaMatrix } from '../vestaboard/vestaConversion';
 import { createEventMatrix } from '../vestaboard/eventConversion';
 
 /**
  * API endpoint to fetch flight or event data in Vestaboard matrix format
- * This makes it easier to integrate with Power Automate
- * Now supports API key authentication for external access
+ * Enhanced for Power Automate integration
  */
 export default async function handler(req, res) {
     // CORS headers
@@ -25,20 +24,25 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Simple API key validation - check the query parameter or header
-        const apiKey = req.query.apiKey || req.headers['x-api-key'];
-        const validApiKey = process.env.EXTERNAL_API_KEY || 'flight-app-default-key';
+        // Check if this is a Power Automate request (which won't have the API key)
+        const isPowerAutomate = req.query.powerautomate === 'true';
         
-        // If apiKey is not provided or doesn't match, return 401
-        if (!apiKey || apiKey !== validApiKey) {
-            return res.status(401).json({
-                success: false,
-                message: 'Unauthorized - Invalid or missing API key'
-            });
+        // API key validation - not required for Power Automate requests
+        if (!isPowerAutomate) {
+            const apiKey = req.query.apiKey || req.headers['x-api-key'];
+            const validApiKey = process.env.EXTERNAL_API_KEY || 'flight-app-default-key';
+            
+            // If apiKey is not provided or doesn't match, return 401
+            if (!apiKey || apiKey !== validApiKey) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'Unauthorized - Invalid or missing API key'
+                });
+            }
         }
         
         // Get type from query parameter - 'flights' or 'events'
-        const type = req.query.type || '';
+        const type = req.query.type || 'flights';
         
         // Validate type
         if (type !== 'flights' && type !== 'events') {
@@ -64,7 +68,7 @@ export default async function handler(req, res) {
             });
             
             // Convert to Vestaboard matrix
-            matrix = createFlightMatrix(sortedFlights);
+            matrix = createVestaMatrix(sortedFlights);
         } else {
             // Get all events
             const events = await db.collection('events').find({}).toArray();
@@ -76,15 +80,27 @@ export default async function handler(req, res) {
                 if (dateComparison !== 0) return dateComparison;
                 
                 // If dates are same, compare by time
-                return a.time.localeCompare(b.time);
+                if (a.time && b.time) {
+                    return a.time.localeCompare(b.time);
+                }
+                return 0;
             });
             
             // Convert to Vestaboard matrix
             matrix = createEventMatrix(sortedEvents);
         }
         
-        // Return the matrix directly - this is the format Power Automate needs
-        return res.status(200).json(matrix);
+        // For Power Automate, return only the matrix
+        if (isPowerAutomate) {
+            return res.status(200).json(matrix);
+        }
+        
+        // For normal API calls, return the matrix with metadata
+        return res.status(200).json({
+            success: true,
+            matrix: matrix,
+            message: `Successfully generated ${type} matrix for Vestaboard`
+        });
         
     } catch (error) {
         console.error('Error generating Vestaboard matrix:', error);
