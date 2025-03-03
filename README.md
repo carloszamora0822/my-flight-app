@@ -1,3 +1,19 @@
-This a web app deployed with Vercel, using CSS, HTML, and JavaScript. 
-The web app takes inputs from a flight schedule, provided by the user. 
-In real time, the Vestaboard shows the flight schedule. 
+This a full-stack web app for a small municipal airport. 
+The web app takes input flight schedule and upcoming events provided by the user. 
+In real time, the Vestaboard shows these inputs with customized displays and 
+is integrated in a workflow of displays. 
+
+**Front-End:**
+- HTML​
+- CSS​
+- JavaScript​
+
+**Back-End:**
+- Node.js​
+- vercel.com
+- Express.js​
+- MongoDB​
+- Vestaboard Read/Write API​
+
+**Deployment:**
+- Vercel​
