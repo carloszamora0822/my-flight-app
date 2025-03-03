@@ -150,17 +150,42 @@ code {
   background-color: #f8f9fa;
 }
 
+.flight-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  transition: background-color 0.2s;
+}
+
+.flight-item:hover {
+  background-color: #e9ecef;
+}
+
+.flight-item p {
+  margin: 0;
+  flex-grow: 1;
+}
+
+.flight-item button {
+  margin-left: 10px;
+}
+
 .delete-btn {
-  background-color: #e63946;
+  background-color: #dc3545;
   color: white;
   border: none;
   padding: 5px 10px;
   border-radius: 4px;
   cursor: pointer;
+  font-size: 14px;
 }
 
 .delete-btn:hover {
-  background-color: #d62828;
+  background-color: #c82333;
 }
 
 .flights-empty, .events-empty {

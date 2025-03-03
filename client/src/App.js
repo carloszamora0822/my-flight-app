@@ -265,7 +265,7 @@ function App() {
       }
     } catch (error) {
       console.error('Error updating Vestaboard with events:', error);
-      alert('Error updating Vestaboard with events. Please try again.');
+      alert('Error updating Vestaboard with events. Please try again later.');
     } finally {
       setIsUpdatingEvents(false);
     }
