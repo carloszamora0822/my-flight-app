@@ -1,0 +1,73 @@
+{
+  "entryPoints": [
+    "/Users/carloszamorawork/my-flight-app/api/events/index.js",
+    "/Users/carloszamorawork/my-flight-app/api/flights/index.js",
+    "/Users/carloszamorawork/my-flight-app/api/power-automate/index.js",
+    "/Users/carloszamorawork/my-flight-app/client/src/App.js"
+  ],
+  "dependencies": {
+    "/Users/carloszamorawork/my-flight-app/api/events/index.js": [
+      "/Users/carloszamorawork/my-flight-app/vestaboard/eventConversion.js",
+      "/Users/carloszamorawork/my-flight-app/vestaboard/vestaboard.js",
+      "/Users/carloszamorawork/my-flight-app/lib/mongodb.js"
+    ],
+    "/Users/carloszamorawork/my-flight-app/vestaboard/eventConversion.js": [],
+    "/Users/carloszamorawork/my-flight-app/vestaboard/vestaboard.js": [
+      "node_modules:dotenv/config"
+    ],
+    "/Users/carloszamorawork/my-flight-app/lib/mongodb.js": [
+      "node_modules:mongodb"
+    ],
+    "/Users/carloszamorawork/my-flight-app/api/flights/index.js": [
+      "/Users/carloszamorawork/my-flight-app/vestaboard/vestaConversion.js",
+      "/Users/carloszamorawork/my-flight-app/vestaboard/vestaboard.js",
+      "/Users/carloszamorawork/my-flight-app/lib/mongodb.js"
+    ],
+    "/Users/carloszamorawork/my-flight-app/vestaboard/vestaConversion.js": [],
+    "/Users/carloszamorawork/my-flight-app/api/power-automate/index.js": [
+      "/Users/carloszamorawork/my-flight-app/lib/mongodb.js",
+      "/Users/carloszamorawork/my-flight-app/vestaboard/flightConversion",
+      "/Users/carloszamorawork/my-flight-app/vestaboard/eventConversion.js",
+      "/Users/carloszamorawork/my-flight-app/vestaboard/vestaboardApi"
+    ],
+    "/Users/carloszamorawork/my-flight-app/client/src/App.js": [
+      "node_modules:react",
+      "/Users/carloszamorawork/my-flight-app/client/src/components/FlightForm.js",
+      "/Users/carloszamorawork/my-flight-app/client/src/components/FlightList.js",
+      "/Users/carloszamorawork/my-flight-app/client/src/components/EventForm.js",
+      "/Users/carloszamorawork/my-flight-app/client/src/components/EventList.js"
+    ],
+    "/Users/carloszamorawork/my-flight-app/client/src/components/FlightForm.js": [
+      "node_modules:react"
+    ],
+    "/Users/carloszamorawork/my-flight-app/client/src/components/FlightList.js": [
+      "node_modules:react",
+      "/Users/carloszamorawork/my-flight-app/client/src/components/FlightItem.js"
+    ],
+    "/Users/carloszamorawork/my-flight-app/client/src/components/FlightItem.js": [
+      "node_modules:react"
+    ],
+    "/Users/carloszamorawork/my-flight-app/client/src/components/EventForm.js": [
+      "node_modules:react"
+    ],
+    "/Users/carloszamorawork/my-flight-app/client/src/components/EventList.js": [
+      "node_modules:react",
+      "/Users/carloszamorawork/my-flight-app/client/src/components/EventItem.js"
+    ],
+    "/Users/carloszamorawork/my-flight-app/client/src/components/EventItem.js": [
+      "node_modules:react"
+    ]
+  },
+  "unusedFiles": [
+    "/Users/carloszamorawork/my-flight-app/analyze-dependencies.js",
+    "/Users/carloszamorawork/my-flight-app/api/presentation/events.js",
+    "/Users/carloszamorawork/my-flight-app/api/presentation/flights.js",
+    "/Users/carloszamorawork/my-flight-app/api/presentation/vestamatrix.js",
+    "/Users/carloszamorawork/my-flight-app/api/vestaboard.js",
+    "/Users/carloszamorawork/my-flight-app/api/vestamatrix/index.js",
+    "/Users/carloszamorawork/my-flight-app/api/vestamatrix.js",
+    "/Users/carloszamorawork/my-flight-app/api/vestatext.js",
+    "/Users/carloszamorawork/my-flight-app/client/src/index.js",
+    "/Users/carloszamorawork/my-flight-app/server/data.js"
+  ]
+}
