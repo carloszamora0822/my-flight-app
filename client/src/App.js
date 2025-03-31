@@ -4,6 +4,8 @@ import FlightList from './components/FlightList';
 import EventForm from './components/EventForm';
 import EventList from './components/EventList';
 
+console.log('[FILE USED] /client/src/App.js');
+
 function App() {
   const [flights, setFlights] = useState([]);
   const [events, setEvents] = useState([]);

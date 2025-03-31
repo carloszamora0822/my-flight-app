@@ -2,6 +2,8 @@ import { createEventMatrix } from '../../vestaboard/eventConversion';
 import { updateVestaboard } from '../../vestaboard/vestaboard';
 import { getCollection } from '../../lib/mongodb';
 
+console.log('[FILE USED] /api/events/index.js');
+
 // In-memory cache for the current request
 let eventsCache = [];
 

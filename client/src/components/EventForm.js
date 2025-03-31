@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 
+console.log('[FILE USED] /client/src/components/EventForm.js');
+
 function EventForm({ addEvent }) {
   const [month, setMonth] = useState('');
   const [day, setDay] = useState('');
